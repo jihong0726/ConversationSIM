@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>对话演练 V14</title>
+    <title>对话演练 V16</title>
     <style>
         :root {
             --primary-color: #1677FF; 
@@ -12,6 +12,7 @@
             --my-bg: var(--primary-color);
             --danger-color: #FF4D4F;
             --danger-hover: #FF7875;
+            --sandbox-color: #FA8C16;
             --bg-color: #F0F2F5;
             --border-color: #E8E8E8;
             --text-main: #333333;
@@ -35,18 +36,22 @@
 
         .setup-body { display: flex; flex: 1; overflow: hidden; background: #F8FAFC; }
 
-        .sidebar { width: 280px; border-right: 1px solid var(--border-color); padding: 24px; background: #FFF; display: flex; flex-direction: column; }
+        .sidebar { width: 300px; border-right: 1px solid var(--border-color); padding: 24px; background: #FFF; display: flex; flex-direction: column; }
         .sidebar h4 { margin: 0 0 10px 0; color: var(--text-main); font-size: 16px; }
         .sidebar p { margin: 0 0 16px 0; color: #888; font-size: 12px; line-height: 1.5; }
         .sidebar textarea { flex: 1; width: 100%; box-sizing: border-box; padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); resize: none; font-size: 13px; margin-bottom: 16px; line-height: 1.5; outline: none; transition: 0.2s;}
         .sidebar textarea:focus { border-color: var(--primary-color); }
+        
         .btn-parse { background: #52C41A; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; }
         .btn-parse:hover { background: #389E0D; }
+        
+        /* 新增：沙盒模式按钮 */
+        .btn-sandbox { background: #FFF; color: var(--sandbox-color); border: 1px solid var(--sandbox-color); padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; margin-top: 12px; }
+        .btn-sandbox:hover { background: #FFF7E6; }
 
         .main-content { flex: 1; padding: 24px 32px; overflow-y: auto; }
         .timeline-container { display: flex; flex-direction: column; gap: 16px; margin-bottom: 24px; }
 
-        /* 配置卡片 */
         .step-item { display: flex; align-items: center; gap: 12px; padding: 16px; border: 1px solid var(--border-color); border-radius: 8px; background: #FFF; transition: 0.2s; position: relative; box-shadow: 0 2px 6px rgba(0,0,0,0.02);}
         .step-item:hover { box-shadow: 0 6px 16px rgba(0,0,0,0.06); border-color: #D9D9D9; }
         .step-item.dragging { opacity: 0.4; }
@@ -87,7 +92,7 @@
         .phone-mockup { width: 420px; height: 90%; background: #FFF; border-radius: 40px; box-shadow: 0 24px 80px rgba(0,0,0,0.15); border: 8px solid #333; display: flex; flex-direction: column; overflow: hidden; position: relative;}
         
         #dashboard-header { background: #FAFAFA; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); }
-        .timer-badge { color: var(--primary-color); font-weight: bold; font-family: monospace; font-size: 15px; background: #E6F4FF; padding: 4px 12px; border-radius: 12px;}
+        .timer-badge { color: var(--primary-color); font-weight: bold; font-family: monospace; font-size: 15px; background: #E6F4FF; padding: 4px 12px; border-radius: 12px; display: flex; align-items: center; gap: 6px;}
         .speed-btn { background: #FFF; border: 1px solid var(--primary-color); color: var(--primary-color); padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: bold; cursor: pointer; transition: 0.2s;}
         .speed-btn:hover { background: var(--primary-color); color: white;}
 
@@ -138,8 +143,8 @@
     <div id="setup-view">
         <div class="setup-header">
             <div class="header-title">
-                <h2>对话演练 V14</h2>
-                <p>动态节拍引擎：倍速即刻生效，沉浸式无极切换</p>
+                <h2>对话演练 V16</h2>
+                <p>新增极速沙盒模式：纯文本无脑输入，5秒自动连播感受文字节奏</p>
             </div>
             
             <div class="role-selector">
@@ -147,15 +152,17 @@
                 <button id="global-role-btn" class="global-toggle-btn" onclick="toggleGlobalRole()">客服</button>
             </div>
 
-            <button class="btn-primary" onclick="startDrill()">🚀 启动演练</button>
+            <button class="btn-primary" onclick="startDrill()">🚀 启动标准演练</button>
         </div>
         
         <div class="setup-body">
             <div class="sidebar">
-                <h4>✨ 智能脱水解析</h4>
-                <p>粘贴原始聊天记录，自动提取对话与真实时间。</p>
-                <textarea id="smart-paste-input" placeholder="请在此处粘贴聊天记录..."></textarea>
-                <button class="btn-parse" onclick="smartParseText()">✨ 一键解析生成</button>
+                <h4>✨ 输入区</h4>
+                <p>你可以粘贴规范的后台记录，也可以直接随意敲打几行纯文案草稿。</p>
+                <textarea id="smart-paste-input" placeholder="输入示例：&#10;你好，在吗？&#10;在的，请问有什么可以帮您？&#10;充值没到账！"></textarea>
+                <button class="btn-parse" onclick="smartParseText()">✨ 一键智能解析</button>
+                
+                <button class="btn-sandbox" onclick="startSandbox()">🏜️ 极速沙盒 (纯文本/5秒连播)</button>
             </div>
             
             <div class="main-content">
@@ -174,7 +181,7 @@
         
         <div class="phone-mockup">
             <div id="dashboard-header">
-                <div class="timer-badge">⏱ 耗时: <span id="elapsed-time">00:00</span></div>
+                <div class="timer-badge">🕒 <span id="simulated-clock">--:--:--</span></div>
                 <button id="speed-btn" class="speed-btn" onclick="toggleSpeed()">⏩ 倍速: 1x</button>
             </div>
             
@@ -206,7 +213,6 @@
         renderTimeline();
     }
 
-    // 倍速实时切换，中途点击立刻生效
     function toggleSpeed() {
         if (speedMultiplier === 1) speedMultiplier = 2;
         else if (speedMultiplier === 2) speedMultiplier = 5;
@@ -233,6 +239,14 @@
         return parts[0] || 0;
     }
 
+    function formatSecToTime(totalSec) {
+        let h = Math.floor(totalSec / 3600) % 24;
+        let m = Math.floor((totalSec % 3600) / 60);
+        let s = Math.floor(totalSec % 60);
+        return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+    }
+
+    // --- 标准的智能解析 (包含时间差计算) ---
     function smartParseText() {
         const text = document.getElementById('smart-paste-input').value;
         if (!text.trim()) return alert("请先粘贴内容！");
@@ -284,10 +298,67 @@
             });
         });
 
-        if (newSteps.length === 0) return alert("未能提取出有效对话，请检查文本格式。");
+        if (newSteps.length === 0) return alert("未能提取出带有时间戳的有效对话。如果你只是想测试纯文案，请点击『极速沙盒』按钮！");
         scriptSteps = scriptSteps.length === 0 ? newSteps : scriptSteps.concat(newSteps);
         renderTimeline();
         document.getElementById('smart-paste-input').value = '';
+    }
+
+    // ==========================================
+    // 核心新增：极速沙盒解析逻辑
+    // ==========================================
+    function startSandbox() {
+        const text = document.getElementById('smart-paste-input').value;
+        if (!text.trim()) return alert("请先在左侧输入你要体验的纯文字！");
+
+        // 按行分割，过滤空行和废话代码
+        const lines = text.split('\n').map(l => l.trim()).filter(l => l !== '' && l !== 'h' && l !== 'E' && l !== '实时聊天' && !l.startsWith('客户端'));
+
+        let newSteps = [];
+        let baseTime = timeToSec("10:00:00");
+        
+        // 默认让对方先说话
+        let currentRole = myGlobalRole === '客服' ? '客户' : '客服'; 
+
+        lines.forEach((line, index) => {
+            let role = currentRole;
+            let content = line;
+
+            // 清理可能存在的时间文本
+            content = content.replace(/(?:\d{4}\/\d{2}\/\d{2}\s+)?(\d{2}:\d{2}(?::\d{2})?)/, '').trim();
+
+            // 尝试识别这一行有没有包含身份前缀
+            if (content.includes('客户') || content.toLowerCase().includes('user')) {
+                role = '客户';
+            } else if (content.includes('客服') || content.includes('William') || content.includes('林伟霖')) {
+                role = '客服';
+            } else {
+                // 如果是纯文本，那就一人一句轮流说
+                role = currentRole;
+                currentRole = currentRole === '客服' ? '客户' : '客服';
+            }
+
+            // 把名字剥离掉，只留对话
+            content = content.replace(/^.*?[：:]/, '').trim();
+
+            // 强制 5 秒间隔
+            let timeStr = formatSecToTime(baseTime + (index * 5));
+
+            newSteps.push({
+                id: Date.now() + index,
+                role: role,
+                content: content || "...",
+                timeStr: timeStr,
+                mode: 'auto' // 沙盒模式强制全部为“系统自动播”，解放双手感受文案
+            });
+        });
+
+        scriptSteps = newSteps;
+        renderTimeline();
+        document.getElementById('smart-paste-input').value = '';
+        
+        // 直接启动演练
+        startDrill();
     }
 
     function renderTimeline() {
@@ -368,8 +439,7 @@
         let newTime = "10:00:00";
         if(scriptSteps.length > 0) {
             let lastSec = timeToSec(scriptSteps[scriptSteps.length-1].timeStr) + 60;
-            let h = Math.floor(lastSec/3600), m = Math.floor((lastSec%3600)/60), s = lastSec%60;
-            newTime = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+            newTime = formatSecToTime(lastSec);
         }
         let lastRole = scriptSteps.length > 0 ? scriptSteps[scriptSteps.length-1].role : myGlobalRole;
         let newRole = lastRole === '客服' ? '客户' : '客服';
@@ -390,38 +460,14 @@
     renderTimeline();
 
     // ==========================================
-    // 核心引擎重写：V14 毫秒级动态节拍引擎 (Tick Engine)
+    // V16 演练播放器核心
     // ==========================================
-    let isSimulating = false, timerInterval = null, secondsElapsed = 0, currentSleepReject = null;
-
-    // 这个引擎能够在你等待中途点击“倍速”时，立刻加速剩余时间的流逝！
-    async function dynamicSleep(targetDelaySec) {
-        let targetMs = targetDelaySec * 1000;
-        let simulatedMs = 0;
-        let realMs = 0;
-        const tickMs = 50; // 每 50 毫秒醒来侦测一次当前倍速
-        const minRealMs = targetDelaySec > 0 ? 500 : 0; // 即使开 10 倍速，也保底播放 0.5 秒动画，防止视觉断层
-
-        while (isSimulating && (simulatedMs < targetMs || realMs < minRealMs)) {
-            await new Promise(resolve => {
-                const timer = setTimeout(resolve, tickMs);
-                // 允许中途强制退出
-                currentSleepReject = () => { clearTimeout(timer); resolve(); }; 
-            });
-            // 核心魔法：用真实逝去的 50ms 乘以当前的倍速，累加到模拟进度中
-            simulatedMs += (tickMs * speedMultiplier);
-            realMs += tickMs;
-        }
-    }
-
-    function startTimer() {
-        secondsElapsed = 0; document.getElementById('elapsed-time').innerText = "00:00";
-        timerInterval = setInterval(() => {
-            secondsElapsed++; // 仪表盘展示的是你真实的测试耗时，不受剧本倍速影响
-            const m = String(Math.floor(secondsElapsed / 60)).padStart(2, '0'), s = String(secondsElapsed % 60).padStart(2, '0');
-            document.getElementById('elapsed-time').innerText = `${m}:${s}`;
-        }, 1000);
-    }
+    let isSimulating = false;
+    let clockInterval = null;
+    let currentSleepReject = null;
+    
+    let simulatedClockSec = 0;      
+    let isWaitingForManual = false; 
 
     function renderMessage(role, content, timeStr) {
         const chatBox = document.getElementById('chat-box');
@@ -443,6 +489,23 @@
         chatBox.scrollTop = chatBox.scrollHeight;
     }
 
+    async function dynamicSleep(targetDelaySec) {
+        let targetMs = targetDelaySec * 1000;
+        let simulatedMs = 0;
+        let realMs = 0;
+        const tickMs = 50; 
+        const minRealMs = targetDelaySec > 0 ? 500 : 0; 
+
+        while (isSimulating && (simulatedMs < targetMs || realMs < minRealMs)) {
+            await new Promise(resolve => {
+                const timer = setTimeout(resolve, tickMs);
+                currentSleepReject = () => { clearTimeout(timer); resolve(); }; 
+            });
+            simulatedMs += (tickMs * speedMultiplier);
+            realMs += tickMs;
+        }
+    }
+
     async function playTypingAnimation(delaySec, role) {
         if(delaySec <= 0 || !isSimulating) return;
         const chatBox = document.getElementById('chat-box');
@@ -455,7 +518,6 @@
         div.innerHTML = `<div class="avatar other-avatar">${avatarIcon}</div><div class="msg-content-wrapper"><div class="typing-indicator"><span></span><span></span><span></span></div></div>`;
         chatBox.appendChild(div); chatBox.scrollTop = chatBox.scrollHeight;
         
-        // 调用 V14 动态节拍引擎
         await dynamicSleep(delaySec);
         
         const el = document.getElementById(indicatorId); if(el) el.remove();
@@ -503,7 +565,7 @@
     }
 
     function resetDrill() {
-        isSimulating = false; clearInterval(timerInterval);
+        isSimulating = false; clearInterval(clockInterval);
         if (currentSleepReject) currentSleepReject();
         document.getElementById('chat-box').innerHTML = '';
         document.getElementById('quick-reply-wrapper').style.display = 'none';
@@ -518,14 +580,23 @@
         document.getElementById('setup-view').style.display = 'none';
         document.getElementById('drill-view').style.display = 'flex';
         
-        isSimulating = true; startTimer();
+        isSimulating = true;
+        
+        simulatedClockSec = timeToSec(scriptSteps[0].timeStr);
+        document.getElementById('simulated-clock').innerText = formatSecToTime(simulatedClockSec);
+
+        clockInterval = setInterval(() => {
+            if (!isSimulating) return;
+            let speed = isWaitingForManual ? 1 : speedMultiplier;
+            simulatedClockSec += (50 * speed) / 1000;
+            document.getElementById('simulated-clock').innerText = formatSecToTime(simulatedClockSec);
+        }, 50);
 
         for (let i = 0; i < scriptSteps.length; i++) {
             const step = scriptSteps[i];
             if (!isSimulating) break;
 
-            // 根据时间戳计算需要等待的真实秒数
-            let delaySec = 1; 
+            let delaySec = 0; 
             if (i > 0) {
                 let prevSec = timeToSec(scriptSteps[i-1].timeStr);
                 let currSec = timeToSec(step.timeStr);
@@ -535,18 +606,24 @@
             }
 
             if (step.mode === 'manual') {
+                isWaitingForManual = true; 
                 const userInputText = await waitForUserReply(step.content);
+                isWaitingForManual = false;
                 if(!isSimulating) break; 
+                
+                simulatedClockSec = timeToSec(step.timeStr); 
                 renderMessage(step.role, userInputText, step.timeStr);
             } else {
-                // 直接将目标秒数传给动画引擎，由引擎负责倍速折算
                 await playTypingAnimation(delaySec, step.role);
                 if(!isSimulating) break; 
+                
+                simulatedClockSec = timeToSec(step.timeStr); 
                 renderMessage(step.role, step.content || "[空]", step.timeStr);
             }
         }
+        
         if (isSimulating) {
-            clearInterval(timerInterval);
+            clearInterval(clockInterval);
             document.getElementById('chat-input').placeholder = "🎉 演练完成！";
             document.getElementById('quick-reply-wrapper').style.display = 'none';
         }
