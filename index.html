@@ -138,9 +138,21 @@
 
 <script>
     const defaultJSON = `[
-  { "role": "客服", "content": "您好！请问有什么可以帮您？", "delay": 1 },
-  { "role": "客户", "content": "你好，我想咨询一下发货时间。", "delay": 2 },
-  { "role": "客服", "content": "通常情况下，您的订单会在付款后 24 小时内发出。", "delay": 2 }
+{
+    "role": "客户",
+    "content": "BNB提现还没到账，着急",
+    "delay": 1
+  },
+  {
+    "role": "客服",
+    "content": "理解老板您的问题，您稍等哈，我这边帮您看一下",
+    "delay": 24
+  },
+  {
+    "role": "客服",
+    "content": "让您久等了，非常抱歉老板，由于当前提币人数较多，系统出现排队情况。您可以根据页面提示，结合自身需求选择取消提币或继续等待处理呢🙏",
+    "delay": 78
+  }
 ]`;
     document.getElementById('json-input').value = defaultJSON;
 
