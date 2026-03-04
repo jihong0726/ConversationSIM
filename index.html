@@ -1,4 +1,3 @@
-```html
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -8,8 +7,8 @@
     <style>
         :root {
             --primary-color: #1677FF; 
-            --service-bg: #FFFFFF;
-            --customer-bg: var(--primary-color);
+            --other-bg: #FFFFFF;
+            --my-bg: var(--primary-color);
             --danger-color: #FF4D4F;
             --bg-color: #F0F2F5;
             --border-color: #E8E8E8;
@@ -65,14 +64,14 @@
         .start-drill-btn { background: #52C41A; color: white; border: none; padding: 15px; font-size: 16px; font-weight: bold; cursor: pointer; }
         .start-drill-btn:hover { background: #389E0D; }
 
-        /* ===== 小工具按钮：排序/复制/插入/删除（尽量不改 UI，仅加功能入口） ===== */
+        /* ===== 小工具按钮：排序/复制/插入/删除 ===== */
         .step-actions { display: flex; gap: 10px; align-items: center; }
         .step-action-btn { cursor: pointer; color: #666; font-weight: normal; user-select: none; }
         .step-action-btn:hover { color: var(--primary-color); }
         .step-action-btn.danger:hover { color: var(--danger-color); }
         .step-action-sep { width: 1px; height: 12px; background: #ddd; }
 
-        /* ===== 拖拽排序（拖标题栏 step-header） ===== */
+        /* ===== 拖拽排序 ===== */
         .step-header { cursor: grab; }
         .step-header:active { cursor: grabbing; }
         .step-card.dragging { opacity: 0.5; }
@@ -87,27 +86,29 @@
 
         #chat-box { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 20px; background-color: #F0F2F5; }
 
-        /* 完美左右布局 */
+        /* 完美左右布局：接收方(系统)在左，发送方(我)在右 */
         .message-row { display: flex; width: 100%; }
-        .message-row.service { flex-direction: row; justify-content: flex-start; }
-        .message-row.customer { flex-direction: row-reverse; justify-content: flex-start; }
+        .message-row.other-side { flex-direction: row; justify-content: flex-start; }
+        .message-row.my-side { flex-direction: row-reverse; justify-content: flex-start; }
 
         .avatar { width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: bold; color: white; margin: 0 12px; flex-shrink: 0; }
-        .avatar.service-avatar { background-color: #1A1D20; }
-        .avatar.customer-avatar { background-color: var(--primary-color); }
+        .avatar.other-avatar { background-color: #1A1D20; }
+        .avatar.my-avatar { background-color: var(--primary-color); }
 
         .msg-content-wrapper { display: flex; flex-direction: column; max-width: 70%; }
-        .message-row.service .msg-content-wrapper { align-items: flex-start; }
-        .message-row.customer .msg-content-wrapper { align-items: flex-end; }
+        .message-row.other-side .msg-content-wrapper { align-items: flex-start; }
+        .message-row.my-side .msg-content-wrapper { align-items: flex-end; }
 
         .message-bubble { padding: 12px 16px; border-radius: 8px; line-height: 1.5; font-size: 14px; word-wrap: break-word; position: relative; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
-        .message-row.service .message-bubble { background: var(--service-bg); color: #333; border-top-left-radius: 0; }
-        .message-row.customer .message-bubble { background: var(--customer-bg); color: #FFF; border-top-right-radius: 0; }
+        .message-row.other-side .message-bubble { background: var(--other-bg); color: #333; border-top-left-radius: 0; }
+        .message-row.my-side .message-bubble { background: var(--my-bg); color: #FFF; border-top-right-radius: 0; }
 
         .msg-meta { font-size: 12px; color: #999; margin-top: 6px; font-family: monospace; }
+        
+        /* 状态图标：只显示在我方发出的消息右下角 */
         .status-icon { position: absolute; bottom: -5px; right: -5px; width: 14px; height: 14px; background: #52C41A; border-radius: 50%; color: white; font-size: 10px; text-align: center; line-height: 14px; border: 2px solid #F0F2F5; }
 
-        /* 打字动画 */
+        /* 打字动画 (强制在左侧) */
         .typing-indicator { display: flex; align-items: center; gap: 4px; padding: 12px 16px; background: white; border-radius: 8px; border-top-left-radius: 0; }
         .typing-indicator span { width: 6px; height: 6px; background: #999; border-radius: 50%; animation: bounce 1.4s infinite ease-in-out both; }
         .typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
@@ -167,14 +168,12 @@
 </div>
 
 <script>
-    // 默认提供一个高度实用的精简剧本，降低前置准备难度
     let scriptSteps = [
         { id: 1, type: 'auto', role: '客户', content: '您好，我提现的资金一直没到账，怎么回事？', delay: 1 },
         { id: 2, type: 'manual', role: '客服', instruction: '请安抚客户并告知正在查询中' },
         { id: 3, type: 'auto', role: '客户', content: '那大概还需要等多久？', delay: 2 }
     ];
 
-    // --- 极简配置面板渲染逻辑 ---
     function renderTimeline() {
         const container = document.getElementById('timeline-container');
         container.innerHTML = '';
@@ -193,7 +192,7 @@
                          ondragover="onDragOver(event)"
                          ondragleave="onDragLeave(event)"
                          ondrop="onDrop(event)">
-                        <span style="color:#52C41A">第 ${index + 1} 步：系统自动触发</span>
+                        <span style="color:#52C41A">第 ${index + 1} 步：系统自动触发（对方）</span>
                         <div class="step-actions">
                             <span class="step-action-btn" onclick="moveStep(${index}, -1)" title="上移">↑</span>
                             <span class="step-action-btn" onclick="moveStep(${index}, 1)" title="下移">↓</span>
@@ -223,7 +222,7 @@
                          ondragover="onDragOver(event)"
                          ondragleave="onDragLeave(event)"
                          ondrop="onDrop(event)">
-                        <span style="color:var(--primary-color)">第 ${index + 1} 步：等待实战手动输入</span>
+                        <span style="color:var(--primary-color)">第 ${index + 1} 步：等待实战手动输入（我方）</span>
                         <div class="step-actions">
                             <span class="step-action-btn" onclick="moveStep(${index}, -1)" title="上移">↑</span>
                             <span class="step-action-btn" onclick="moveStep(${index}, 1)" title="下移">↓</span>
@@ -265,7 +264,7 @@
         if (step) step[field] = field === 'delay' ? Number(value) : value; 
     }
 
-    // ===== 排序 / 插入 / 复制（按钮版） =====
+    // ===== 排序 / 插入 / 复制 =====
     function moveStep(index, delta) {
         const newIndex = index + delta;
         if (newIndex < 0 || newIndex >= scriptSteps.length) return;
@@ -294,7 +293,7 @@
         renderTimeline();
     }
 
-    // ===== 拖拽排序（拖标题栏 step-header） =====
+    // ===== 拖拽排序 =====
     let dragFromIndex = null;
 
     function getCardIndexFromEvent(e) {
@@ -309,7 +308,6 @@
         dragFromIndex = getCardIndexFromEvent(e);
         const card = e.currentTarget.closest('.step-card');
         if (card) card.classList.add('dragging');
-
         e.dataTransfer.effectAllowed = 'move';
         e.dataTransfer.setData('text/plain', String(dragFromIndex));
     }
@@ -337,15 +335,12 @@
         e.preventDefault();
         const toIndex = getCardIndexFromEvent(e);
         const fromIndex = dragFromIndex;
-
         const card = e.currentTarget.closest('.step-card');
         if (card) card.classList.remove('drag-over');
-
         if (fromIndex === null || toIndex === null || fromIndex === toIndex) return;
 
         const moved = scriptSteps.splice(fromIndex, 1)[0];
         scriptSteps.splice(toIndex, 0, moved);
-
         renderTimeline();
     }
 
@@ -386,16 +381,22 @@
         }, 1000);
     }
 
-    function renderMessage(role, content) {
+    // 渲染消息：新增参数 type (manual: 我方在右; auto: 系统在左)
+    function renderMessage(role, content, type) {
         const chatBox = document.getElementById('chat-box');
         const msgDiv = document.createElement('div');
-        const msgClass = role === '客服' ? 'service' : 'customer';
+        
+        // 判断是谁的视角
+        const isMySide = (type === 'manual');
+        const msgClass = isMySide ? 'my-side' : 'other-side';
         const avatarIcon = role === '客服' ? '服' : '客';
-        const statusIconHtml = role === '客服' ? `<div class="status-icon">✓</div>` : '';
+        
+        // 只有我方发送的消息，才带有送达小绿勾
+        const statusIconHtml = isMySide ? `<div class="status-icon">✓</div>` : '';
 
         msgDiv.className = `message-row ${msgClass}`;
         msgDiv.innerHTML = `
-            <div class="avatar ${msgClass}-avatar">${avatarIcon}</div>
+            <div class="avatar ${isMySide ? 'my-avatar' : 'other-avatar'}">${avatarIcon}</div>
             <div class="msg-content-wrapper">
                 <div class="message-bubble">${content}${statusIconHtml}</div>
                 <div class="msg-meta">${role} • ${getNowTime()}</div>
@@ -409,14 +410,18 @@
         if(delayMs <= 0 || !isSimulating) return;
         const chatBox = document.getElementById('chat-box');
         const indicatorId = 'typing-' + Date.now();
-        const msgClass = role === '客服' ? 'service' : 'customer';
+        const avatarIcon = role === '客服' ? '服' : '客';
+        
         const div = document.createElement('div');
         div.id = indicatorId;
-        div.className = `message-row ${msgClass}`;
-        div.innerHTML = `<div class="avatar ${msgClass}-avatar">${role==='客服'?'服':'客'}</div><div class="msg-content-wrapper"><div class="typing-indicator"><span></span><span></span><span></span></div></div>`;
+        // 动画永远是系统的动作，故永远靠左 (other-side)
+        div.className = `message-row other-side`;
+        div.innerHTML = `<div class="avatar other-avatar">${avatarIcon}</div><div class="msg-content-wrapper"><div class="typing-indicator"><span></span><span></span><span></span></div></div>`;
         chatBox.appendChild(div);
         chatBox.scrollTop = chatBox.scrollHeight;
+        
         try { await sleep(delayMs); } catch(e) {}
+        
         const el = document.getElementById(indicatorId); 
         if(el) el.remove();
     }
@@ -480,13 +485,15 @@
             if (!isSimulating) break;
 
             if (step.type === 'manual') {
+                // 手动动作：渲染在右侧
                 const userInputText = await waitForUserReply(step.instruction);
                 if(!isSimulating) break;
-                renderMessage(step.role, userInputText);
+                renderMessage(step.role, userInputText, 'manual');
             } else {
+                // 系统动作：渲染在左侧
                 await playTypingAnimation(step.delay * 1000, step.role);
                 if(!isSimulating) break;
-                renderMessage(step.role, step.content || "[空]");
+                renderMessage(step.role, step.content || "[空]", 'auto');
             }
         }
 
@@ -498,4 +505,3 @@
 </script>
 </body>
 </html>
-```
