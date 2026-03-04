@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>对话演练 V13</title>
+    <title>对话演练 V14</title>
     <style>
         :root {
             --primary-color: #1677FF; 
@@ -55,23 +55,14 @@
         .drag-handle { cursor: grab; padding-right: 4px; color: #CCC; font-size: 20px; font-weight: bold; user-select: none; }
         .drag-handle:active { cursor: grabbing; }
         
-        /* 核心优化：一键切换标签按钮 (Toggle Badge) */
-        .toggle-badge { 
-            display: inline-flex; align-items: center; justify-content: center; 
-            padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 600; 
-            cursor: pointer; user-select: none; border: 1px solid transparent; 
-            transition: all 0.15s ease; min-width: 70px; white-space: nowrap;
-        }
+        .toggle-badge { display: inline-flex; align-items: center; justify-content: center; padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; user-select: none; border: 1px solid transparent; transition: all 0.15s ease; min-width: 70px; white-space: nowrap; }
         .toggle-badge:active { transform: scale(0.95); }
         
-        /* 角色颜色 */
         .role-kefu { background: #F5F8FF; color: #1677FF; border-color: #ADC6FF; }
         .role-kehu { background: #F6FFED; color: #52C41A; border-color: #B7EB8F; }
-        /* 模式颜色 */
         .mode-auto { background: #F6FFED; color: #52C41A; border-color: #B7EB8F; }
         .mode-manual { background: #E6F4FF; color: #1677FF; border-color: #91CAFF; }
 
-        /* 输入框优化 */
         .input-content { flex: 1; padding: 10px 14px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 13px; outline: none; resize: vertical; min-height: 24px; font-family: inherit; line-height: 1.5; transition: 0.2s;}
         .input-content:focus { border-color: var(--primary-color); box-shadow: 0 0 0 2px rgba(22,119,255,0.1);}
         
@@ -147,8 +138,8 @@
     <div id="setup-view">
         <div class="setup-header">
             <div class="header-title">
-                <h2>对话演练 V13</h2>
-                <p>沉浸式交互配置，告别繁琐的选择框</p>
+                <h2>对话演练 V14</h2>
+                <p>动态节拍引擎：倍速即刻生效，沉浸式无极切换</p>
             </div>
             
             <div class="role-selector">
@@ -183,7 +174,7 @@
         
         <div class="phone-mockup">
             <div id="dashboard-header">
-                <div class="timer-badge">⏱ <span id="elapsed-time">00:00</span></div>
+                <div class="timer-badge">⏱ 耗时: <span id="elapsed-time">00:00</span></div>
                 <button id="speed-btn" class="speed-btn" onclick="toggleSpeed()">⏩ 倍速: 1x</button>
             </div>
             
@@ -215,6 +206,7 @@
         renderTimeline();
     }
 
+    // 倍速实时切换，中途点击立刻生效
     function toggleSpeed() {
         if (speedMultiplier === 1) speedMultiplier = 2;
         else if (speedMultiplier === 2) speedMultiplier = 5;
@@ -298,7 +290,6 @@
         document.getElementById('smart-paste-input').value = '';
     }
 
-    // --- 核心优化：渲染无极按钮 ---
     function renderTimeline() {
         const container = document.getElementById('timeline-container');
         container.innerHTML = '';
@@ -342,7 +333,6 @@
         });
     }
 
-    // --- 单点切换逻辑 ---
     function toggleStepRole(id) {
         const step = scriptSteps.find(s => s.id === id);
         if (step) {
@@ -399,18 +389,35 @@
     
     renderTimeline();
 
-    // --- 演练播放器核心 ---
+    // ==========================================
+    // 核心引擎重写：V14 毫秒级动态节拍引擎 (Tick Engine)
+    // ==========================================
     let isSimulating = false, timerInterval = null, secondsElapsed = 0, currentSleepReject = null;
 
-    const sleep = (ms) => new Promise((resolve, reject) => {
-        const timeout = setTimeout(resolve, ms);
-        currentSleepReject = () => { clearTimeout(timeout); reject(new Error("中断")); };
-    });
+    // 这个引擎能够在你等待中途点击“倍速”时，立刻加速剩余时间的流逝！
+    async function dynamicSleep(targetDelaySec) {
+        let targetMs = targetDelaySec * 1000;
+        let simulatedMs = 0;
+        let realMs = 0;
+        const tickMs = 50; // 每 50 毫秒醒来侦测一次当前倍速
+        const minRealMs = targetDelaySec > 0 ? 500 : 0; // 即使开 10 倍速，也保底播放 0.5 秒动画，防止视觉断层
+
+        while (isSimulating && (simulatedMs < targetMs || realMs < minRealMs)) {
+            await new Promise(resolve => {
+                const timer = setTimeout(resolve, tickMs);
+                // 允许中途强制退出
+                currentSleepReject = () => { clearTimeout(timer); resolve(); }; 
+            });
+            // 核心魔法：用真实逝去的 50ms 乘以当前的倍速，累加到模拟进度中
+            simulatedMs += (tickMs * speedMultiplier);
+            realMs += tickMs;
+        }
+    }
 
     function startTimer() {
         secondsElapsed = 0; document.getElementById('elapsed-time').innerText = "00:00";
         timerInterval = setInterval(() => {
-            secondsElapsed++;
+            secondsElapsed++; // 仪表盘展示的是你真实的测试耗时，不受剧本倍速影响
             const m = String(Math.floor(secondsElapsed / 60)).padStart(2, '0'), s = String(secondsElapsed % 60).padStart(2, '0');
             document.getElementById('elapsed-time').innerText = `${m}:${s}`;
         }, 1000);
@@ -436,8 +443,8 @@
         chatBox.scrollTop = chatBox.scrollHeight;
     }
 
-    async function playTypingAnimation(delayMs, role) {
-        if(delayMs <= 0 || !isSimulating) return;
+    async function playTypingAnimation(delaySec, role) {
+        if(delaySec <= 0 || !isSimulating) return;
         const chatBox = document.getElementById('chat-box');
         const indicatorId = 'typing-' + Date.now();
         const avatarIcon = role === '客服' ? '服' : '客';
@@ -448,7 +455,9 @@
         div.innerHTML = `<div class="avatar other-avatar">${avatarIcon}</div><div class="msg-content-wrapper"><div class="typing-indicator"><span></span><span></span><span></span></div></div>`;
         chatBox.appendChild(div); chatBox.scrollTop = chatBox.scrollHeight;
         
-        try { await sleep(delayMs); } catch(e) {}
+        // 调用 V14 动态节拍引擎
+        await dynamicSleep(delaySec);
+        
         const el = document.getElementById(indicatorId); if(el) el.remove();
     }
 
@@ -515,6 +524,7 @@
             const step = scriptSteps[i];
             if (!isSimulating) break;
 
+            // 根据时间戳计算需要等待的真实秒数
             let delaySec = 1; 
             if (i > 0) {
                 let prevSec = timeToSec(scriptSteps[i-1].timeStr);
@@ -523,18 +533,14 @@
                 if (diff < 0) diff += 86400; 
                 delaySec = Math.max(0, diff);
             }
-            
-            let actualWaitTimeMs = (delaySec * 1000) / speedMultiplier;
-            if (actualWaitTimeMs < 500 && delaySec > 0) {
-                actualWaitTimeMs = 500;
-            }
 
             if (step.mode === 'manual') {
                 const userInputText = await waitForUserReply(step.content);
                 if(!isSimulating) break; 
                 renderMessage(step.role, userInputText, step.timeStr);
             } else {
-                await playTypingAnimation(actualWaitTimeMs, step.role);
+                // 直接将目标秒数传给动画引擎，由引擎负责倍速折算
+                await playTypingAnimation(delaySec, step.role);
                 if(!isSimulating) break; 
                 renderMessage(step.role, step.content || "[空]", step.timeStr);
             }
