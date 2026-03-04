@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>对话演练 V17</title>
+    <title>对话演练 V18</title>
     <style>
         :root {
             --primary-color: #1677FF; 
@@ -74,8 +74,9 @@
         .input-time { width: 80px; padding: 8px; border: 1px solid var(--border-color); border-radius: 6px; text-align: center; font-family: monospace; font-size: 13px; outline:none;}
         .input-time:focus { border-color: var(--primary-color); }
 
+        .btn-group { display: flex; gap: 4px; }
         .icon-btn { cursor: pointer; color: #999; font-size: 16px; border: none; background: transparent; padding: 8px; border-radius: 6px; transition: 0.2s; display: flex; align-items: center; justify-content: center;}
-        .icon-btn:hover { background: #F0F0F0; color: var(--text-main); }
+        .icon-btn:hover { background: #F0F0F0; color: var(--primary-color); }
         .icon-btn.danger:hover { background: #FFF1F0; color: var(--danger-color); }
 
         .bottom-actions { display: flex; gap: 16px; margin-top: 10px; }
@@ -142,8 +143,8 @@
     <div id="setup-view">
         <div class="setup-header">
             <div class="header-title">
-                <h2>对话演练 V17</h2>
-                <p>解绑沙盒启动逻辑，先预览排版再开始演练</p>
+                <h2>对话演练 V18</h2>
+                <p>恢复并升级了“向下复制”功能，一键克隆并智能递增时间</p>
             </div>
             
             <div class="role-selector">
@@ -302,7 +303,6 @@
         document.getElementById('smart-paste-input').value = '';
     }
 
-    // --- 修改：沙盒模式仅排版，不再自动跳转 ---
     function startSandbox() {
         const text = document.getElementById('smart-paste-input').value;
         if (!text.trim()) return alert("请先在左侧输入你要体验的纯文字！");
@@ -344,8 +344,24 @@
         renderTimeline();
         document.getElementById('smart-paste-input').value = '';
         
-        // 移除自动启动功能，让用户自己选择合适确认
         alert("🏜️ 沙盒剧本已为您自动排版在右侧！\n\n如需体验 5 秒连播的视觉效果，请点击右上角的【启动标准演练】。");
+    }
+
+    // --- 核心更新：加入一键复制按钮与逻辑 ---
+    function duplicateStep(id) {
+        const index = scriptSteps.findIndex(s => s.id === id);
+        if (index > -1) {
+            const original = scriptSteps[index];
+            const copy = JSON.parse(JSON.stringify(original));
+            copy.id = Date.now() + Math.random(); // 确保新行的 ID 唯一
+            
+            // 智能：给复制出来的行默认加上 5 秒的时间，免得你还要手动改时间冲突
+            let currentSec = timeToSec(copy.timeStr);
+            copy.timeStr = formatSecToTime(currentSec + 5);
+
+            scriptSteps.splice(index + 1, 0, copy); // 插入到当前行下方
+            renderTimeline();
+        }
     }
 
     function renderTimeline() {
@@ -372,6 +388,7 @@
             const modeClass = step.mode === 'auto' ? 'mode-auto' : 'mode-manual';
             const modeText = step.mode === 'auto' ? '🤖 系统自动发' : '✍️ 实战我来敲';
 
+            // 按钮组增加了向下的复制图标
             item.innerHTML = `
                 <div class="drag-handle" title="拖拽排序">⋮⋮</div>
                 <div style="width: 24px; color:#BFBFBF; font-weight:600; font-size:14px;">${index+1}.</div>
@@ -383,9 +400,15 @@
                 <div class="time-wrapper">
                     时间 <input type="text" class="input-time" value="${step.timeStr || '10:00:00'}" onchange="updateStep(${step.id}, 'timeStr', this.value)">
                 </div>
-                <button class="icon-btn danger" onclick="deleteStep(${step.id})" title="删除此行">
-                    <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
-                </button>
+                
+                <div class="btn-group">
+                    <button class="icon-btn" onclick="duplicateStep(${step.id})" title="向下复制此行">
+                        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                    </button>
+                    <button class="icon-btn danger" onclick="deleteStep(${step.id})" title="删除此行">
+                        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                    </button>
+                </div>
             `;
             container.appendChild(item);
         });
