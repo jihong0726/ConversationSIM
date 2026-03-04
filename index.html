@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>客服对话演练系统</title>
+    <title>ServiceBox 客服演练沙盒</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -22,20 +22,16 @@
             padding: 20px;
             box-sizing: border-box;
         }
-        /* 设置区域样式 */
-        #setup-area {
-            display: block;
+        
+        /* 启动界面样式 */
+        #start-screen {
+            text-align: center;
+            padding: 40px 20px;
         }
-        textarea {
-            width: 100%;
-            height: 200px;
-            padding: 10px;
-            box-sizing: border-box;
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            resize: vertical;
-            font-family: monospace;
-            margin-bottom: 15px;
+        .status-text {
+            color: #666;
+            margin-bottom: 20px;
+            font-size: 14px;
         }
         button {
             width: 100%;
@@ -51,14 +47,17 @@
         button:hover {
             background-color: #0056b3;
         }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+
         /* 聊天区域样式 */
         #chat-area {
             display: none;
             height: 650px;
             flex-direction: column;
         }
-        
-        /* 新增：顶部时间栏样式 */
         #time-header {
             display: flex;
             justify-content: space-between;
@@ -68,21 +67,20 @@
             border-radius: 8px 8px 0 0;
             font-size: 13px;
             font-weight: 500;
-            margin-bottom: 0; /* 与聊天框紧密连接 */
+            margin-bottom: 0;
         }
         .time-block span {
             font-family: monospace;
             font-size: 14px;
             margin-left: 5px;
-            color: #4facfe; /* 高亮时间文字 */
+            color: #4facfe;
         }
-
         #chat-box {
             flex-grow: 1;
             overflow-y: auto;
             padding: 15px;
             border: 1px solid #eee;
-            border-top: none; /* 去除与时间栏相接的边框 */
+            border-top: none;
             border-radius: 0 0 8px 8px;
             background-color: #fafafa;
             display: flex;
@@ -96,7 +94,14 @@
             line-height: 1.5;
             word-wrap: break-word;
             font-size: 14px;
+            animation: fadeIn 0.3s ease-in-out; /* 添加了一个简单的气泡出现动画 */
         }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
         .message.service {
             align-self: flex-start;
             background-color: #e9ecef;
@@ -120,10 +125,10 @@
 <body>
 
 <div class="container">
-    <div id="setup-area">
-        <h3 style="margin-top:0;">输入演练剧本 (JSON)</h3>
-        <textarea id="json-input"></textarea>
-        <button id="start-btn">开始设置</button>
+    <div id="start-screen">
+        <h2>客服演练沙盒</h2>
+        <div class="status-text" id="status-message">准备读取剧本文件...</div>
+        <button id="load-start-btn">加载 data.json 并开始</button>
     </div>
 
     <div id="chat-area">
@@ -131,78 +136,78 @@
             <div class="time-block">当前时间:<span id="local-time">--:--:--</span></div>
             <div class="time-block">经理时间 (PT):<span id="manager-time">--:--:--</span></div>
         </div>
-        
         <div id="chat-box"></div>
     </div>
 </div>
 
 <script>
-    const defaultJSON = `[
-{
-    "role": "客户",
-    "content": "BNB提现还没到账，着急",
-    "delay": 1
-  },
-  {
-    "role": "客服",
-    "content": "理解老板您的问题，您稍等哈，我这边帮您看一下",
-    "delay": 24
-  },
-  {
-    "role": "客服",
-    "content": "让您久等了，非常抱歉老板，由于当前提币人数较多，系统出现排队情况。您可以根据页面提示，结合自身需求选择取消提币或继续等待处理呢🙏",
-    "delay": 78
-  }
-]`;
-    document.getElementById('json-input').value = defaultJSON;
-
+    // 睡眠函数，用于控制延迟
     const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-    // 新增：更新时钟的函数
+    // 时钟控制函数
     function startClock() {
         setInterval(() => {
             const now = new Date();
-            
-            // 1. 获取本地时间 (读取你电脑/手机系统的默认时区)
+            // 本地时间 (自动读取用户电脑时区)
             document.getElementById('local-time').innerText = now.toLocaleTimeString('zh-CN', { hour12: false });
-            
-            // 2. 获取经理时间 (使用 toLocaleTimeString 的 timeZone 属性强制转换时区，这里以太平洋时间为例)
+            // 经理时间 (固定为太平洋时间 PT)
             document.getElementById('manager-time').innerText = now.toLocaleTimeString('zh-CN', { 
                 timeZone: 'America/Los_Angeles', 
                 hour12: false 
             });
-        }, 1000); // 每 1000 毫秒 (1秒) 更新一次
+        }, 1000);
     }
 
-    document.getElementById('start-btn').addEventListener('click', () => {
-        const jsonText = document.getElementById('json-input').value;
-        let scriptData;
+    // 按钮点击事件：读取 JSON 并开始
+    document.getElementById('load-start-btn').addEventListener('click', async () => {
+        const statusMsg = document.getElementById('status-message');
+        const btn = document.getElementById('load-start-btn');
+        
+        btn.disabled = true;
+        statusMsg.innerText = "正在读取 data.json...";
 
         try {
-            scriptData = JSON.parse(jsonText);
-        } catch (e) {
-            alert("JSON 格式错误，请检查语法！");
-            return;
-        }
+            // 请求同目录下的 data.json
+            const response = await fetch('./data.json');
+            
+            if (!response.ok) {
+                throw new Error(`HTTP 错误! 状态码: ${response.status}`);
+            }
+            
+            const scriptData = await response.json();
 
-        if (confirm("是否立即开始演练？")) {
-            document.getElementById('setup-area').style.display = 'none';
-            document.getElementById('chat-area').style.display = 'flex';
-            
-            // 启动时钟
-            startClock();
-            
-            // 开始执行剧本
-            runDrill(scriptData);
+            btn.disabled = false;
+            statusMsg.innerText = "读取成功！";
+
+            // 弹出系统确认框
+            if (confirm("已成功加载剧本，是否立即开始演练？")) {
+                // 切换界面
+                document.getElementById('start-screen').style.display = 'none';
+                document.getElementById('chat-area').style.display = 'flex';
+                
+                // 启动顶部时钟
+                startClock();
+                // 执行对话剧本
+                runDrill(scriptData);
+            }
+
+        } catch (error) {
+            btn.disabled = false;
+            statusMsg.style.color = "red";
+            statusMsg.innerText = "读取失败！请确保 data.json 文件与 index.html 在同一目录下。";
+            console.error("读取 JSON 失败:", error);
         }
     });
 
+    // 核心演练逻辑
     async function runDrill(scriptData) {
         const chatBox = document.getElementById('chat-box');
         
         for (const msg of scriptData) {
+            // 根据 JSON 设定的秒数进行等待
             await sleep(msg.delay * 1000);
 
+            // 创建消息气泡
             const msgDiv = document.createElement('div');
             const msgClass = msg.role === '客服' ? 'service' : 'customer';
             msgDiv.className = `message ${msgClass}`;
@@ -213,6 +218,8 @@
             `;
 
             chatBox.appendChild(msgDiv);
+            
+            // 自动滚动到底部
             chatBox.scrollTop = chatBox.scrollHeight;
         }
     }
