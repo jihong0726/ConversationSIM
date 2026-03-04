@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ServiceBox 智能演练舱</title>
+    <title>对话演练 V2</title>
     <style>
         :root {
-            --primary-color: #0052FF; /* 更现代的科技蓝 */
+            --primary-color: #0052FF;
             --service-bg: #F0F2F5;
             --service-text: #1C1E21;
             --customer-bg: var(--primary-color);
@@ -28,7 +28,7 @@
 
         .container {
             width: 100%;
-            max-width: 600px; /* 稍微加宽以适应更丰富的UI */
+            max-width: 600px;
             background: white;
             border-radius: 16px;
             box-shadow: 0 8px 24px rgba(0,0,0,0.08);
@@ -39,7 +39,6 @@
             max-height: 800px;
         }
 
-        /* 启动界面样式 */
         #start-screen {
             flex: 1;
             display: flex;
@@ -65,19 +64,9 @@
             max-width: 300px;
         }
 
-        .start-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(0, 82, 255, 0.4);
-        }
+        .start-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0, 82, 255, 0.4); }
+        .start-btn:disabled { background-color: #A0B9ED; cursor: not-allowed; transform: none; box-shadow: none; }
 
-        .start-btn:disabled {
-            background-color: #A0B9ED;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
-
-        /* 聊天区域主控台 (头部) */
         #chat-area {
             display: none;
             flex-direction: column;
@@ -93,21 +82,22 @@
             gap: 12px;
         }
 
+        /* 顶部耗时居中显示 */
         .top-stats {
             display: flex;
-            justify-content: space-between;
+            justify-content: center;
             align-items: center;
-            font-size: 14px;
-            font-family: monospace;
         }
 
         .timer-badge {
             background-color: rgba(255,255,255,0.1);
-            padding: 4px 10px;
-            border-radius: 6px;
+            padding: 6px 16px;
+            border-radius: 8px;
             color: #4facfe;
             font-weight: bold;
-            font-size: 15px;
+            font-size: 16px;
+            font-family: monospace;
+            letter-spacing: 1px;
         }
 
         .control-panel {
@@ -129,12 +119,8 @@
             cursor: pointer;
             transition: background 0.2s;
         }
+        .stop-btn:hover { background-color: #D32F2F; }
 
-        .stop-btn:hover {
-            background-color: #D32F2F;
-        }
-
-        /* 聊天气泡区域 */
         #chat-box {
             flex: 1;
             overflow-y: auto;
@@ -151,16 +137,18 @@
             animation: slideIn 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
         }
 
+        /* 修复后的布局逻辑 */
         .message-row.service {
             justify-content: flex-start;
+            flex-direction: row;
         }
 
         .message-row.customer {
-            justify-content: flex-end;
+            /* 在 row-reverse 模式下，flex-start 代表从右侧开始排列 */
+            justify-content: flex-start; 
             flex-direction: row-reverse;
         }
 
-        /* 头像样式 */
         .avatar {
             width: 40px;
             height: 40px;
@@ -181,7 +169,6 @@
             align-items: flex-end;
         }
 
-        /* 气泡样式优化 */
         .message-bubble {
             padding: 12px 16px;
             border-radius: 12px;
@@ -203,36 +190,31 @@
             border-top-right-radius: 4px;
         }
 
-        /* 时间戳样式精确到秒 */
         .msg-meta {
             font-size: 12px;
             color: #888;
             margin-top: 6px;
-            font-family: monospace;
         }
 
         @keyframes slideIn {
             from { opacity: 0; transform: translateY(15px); }
             to { opacity: 1; transform: translateY(0); }
         }
-
     </style>
 </head>
 <body>
 
 <div class="container">
     <div id="start-screen">
-        <h2 style="color: #333; margin-bottom: 8px;">ServiceBox 演练舱</h2>
+        <h2 style="color: #333; margin-bottom: 8px;">对话演练 V2</h2>
         <p id="status-message" style="color: #666; margin-bottom: 30px;">就绪，点击下方按钮读取剧本</p>
-        <button id="load-start-btn" class="start-btn">载入 data.json 并开始</button>
+        <button id="load-start-btn" class="start-btn">载入并开始演练</button>
     </div>
 
     <div id="chat-area">
         <div id="dashboard-header">
             <div class="top-stats">
-                <div>本地: <span id="local-time">--:--:--</span></div>
-                <div class="timer-badge">⏱ 耗时: <span id="elapsed-time">00:00</span></div>
-                <div>PT: <span id="manager-time">--:--:--</span></div>
+                <div class="timer-badge">⏱ 演练耗时: <span id="elapsed-time">00:00</span></div>
             </div>
             <div class="control-panel">
                 <span style="font-size: 14px; font-weight: 500;">🟢 演练进行中...</span>
@@ -245,36 +227,20 @@
 </div>
 
 <script>
-    // --- 核心全局变量 ---
-    let isSimulating = false;   // 演练状态标志
-    let timerInterval = null;   // 计时器句柄
-    let clockInterval = null;   // 时钟句柄
-    let secondsElapsed = 0;     // 经过的秒数
-    let currentSleepReject = null; // 用于强制中断休眠 (Stop功能核心)
+    let isSimulating = false;
+    let timerInterval = null;
+    let secondsElapsed = 0;
+    let currentSleepReject = null;
 
-    // --- 经过改良的可中断休眠函数 ---
     const sleep = (ms) => new Promise((resolve, reject) => {
         const timeout = setTimeout(resolve, ms);
-        // 保存 reject 方法，当点击停止按钮时触发
         currentSleepReject = () => {
             clearTimeout(timeout);
             reject(new Error("演练已被手动强制停止"));
         };
     });
 
-    // --- 时钟与计时器逻辑 ---
-    function startClocks() {
-        // 1. 顶部当前时间刷新 (精确到秒)
-        clockInterval = setInterval(() => {
-            const now = new Date();
-            document.getElementById('local-time').innerText = now.toLocaleTimeString('zh-CN', { hour12: false });
-            document.getElementById('manager-time').innerText = now.toLocaleTimeString('zh-CN', { 
-                timeZone: 'America/Los_Angeles', 
-                hour12: false 
-            });
-        }, 1000);
-
-        // 2. 演练耗时计时器 (秒表)
+    function startTimer() {
         secondsElapsed = 0;
         document.getElementById('elapsed-time').innerText = "00:00";
         timerInterval = setInterval(() => {
@@ -285,17 +251,14 @@
         }, 1000);
     }
 
-    function stopClocks() {
-        clearInterval(clockInterval);
+    function stopTimer() {
         clearInterval(timerInterval);
     }
 
-    // --- 停止按钮逻辑 ---
     document.getElementById('stop-btn').addEventListener('click', () => {
         isSimulating = false;
-        stopClocks();
+        stopTimer();
         
-        // 改变按钮样式和文字
         const stopBtn = document.getElementById('stop-btn');
         stopBtn.innerText = "已终止 (刷新页面重开)";
         stopBtn.style.backgroundColor = "#555";
@@ -303,14 +266,12 @@
 
         document.querySelector('.control-panel span').innerText = "🔴 演练已终止";
 
-        // 如果系统正在长久等待(比如78秒)，立即强行中断等待
         if (currentSleepReject) {
             currentSleepReject();
             currentSleepReject = null;
         }
     });
 
-    // --- 启动逻辑 ---
     document.getElementById('load-start-btn').addEventListener('click', async () => {
         const btn = document.getElementById('load-start-btn');
         const statusMsg = document.getElementById('status-message');
@@ -327,12 +288,9 @@
             document.getElementById('chat-area').style.display = 'flex';
             
             isSimulating = true;
-            startClocks();
+            startTimer();
             
-            // 启动演练，并捕获强制停止引发的错误
-            runDrill(scriptData).catch(err => {
-                console.log(err.message); // 后台静默打印被停止的信息
-            });
+            runDrill(scriptData).catch(err => console.log(err.message));
 
         } catch (error) {
             btn.disabled = false;
@@ -342,18 +300,14 @@
         }
     });
 
-    // --- 聊天渲染核心逻辑 ---
     async function runDrill(scriptData) {
         const chatBox = document.getElementById('chat-box');
         
         for (const msg of scriptData) {
-            // 如果已经被点击了停止，直接退出循环
             if (!isSimulating) break;
 
-            // 等待设定的时间 (可被 stopBtn 中断)
             await sleep(msg.delay * 1000);
 
-            // 使用免费API自动生成文字头像
             const avatarColor = msg.role === '客服' ? '1A1D20' : '0052FF';
             const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(msg.role.charAt(0))}&background=${avatarColor}&color=fff&size=80`;
 
@@ -361,15 +315,14 @@
             const msgClass = msg.role === '客服' ? 'service' : 'customer';
             msgDiv.className = `message-row ${msgClass}`;
 
-            // 获取当前精确到秒的时间戳
-            const timeStamp = new Date().toLocaleTimeString('zh-CN', { hour12: false });
+            // 提取 JSON 中你设定的历史时间
+            const displayTime = msg.time || "";
 
-            // 构建带头像、气泡和单条时间戳的 UI
             msgDiv.innerHTML = `
                 <img src="${avatarUrl}" class="avatar" alt="avatar">
                 <div class="msg-content-wrapper">
                     <div class="message-bubble">${msg.content}</div>
-                    <div class="msg-meta">${msg.role} • ${timeStamp}</div>
+                    <div class="msg-meta">${msg.role} • ${displayTime}</div>
                 </div>
             `;
 
@@ -377,9 +330,8 @@
             chatBox.scrollTop = chatBox.scrollHeight;
         }
 
-        // 正常播完后停止计时
         if (isSimulating) {
-            stopClocks();
+            stopTimer();
             document.querySelector('.control-panel span').innerText = "✅ 演练已完成";
             document.getElementById('stop-btn').style.display = 'none';
         }
