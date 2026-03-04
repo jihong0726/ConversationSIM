@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>对话演练 V9</title>
+    <title>对话演练 V10</title>
     <style>
         :root {
             --primary-color: #1677FF; 
@@ -56,10 +56,11 @@
         .step-item:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.05); border-color: #D9D9D9; background: #FFF; }
         
         .step-item select { padding: 8px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 13px; outline: none; background: #FFF; }
-        /* 使用 textarea 替换 input，以便在设置界面也能显示多行文本 */
         .input-content { flex: 1; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 13px; outline: none; resize: vertical; min-height: 20px; font-family: inherit; line-height: 1.5; }
-        .delay-wrapper { display: flex; align-items: center; gap: 6px; font-size: 13px; color: #666; }
-        .input-delay { width: 45px; padding: 6px; border: 1px solid var(--border-color); border-radius: 6px; text-align: center; }
+        
+        /* 时间输入框样式优化 */
+        .time-wrapper { display: flex; align-items: center; gap: 6px; font-size: 13px; color: #666; font-weight: bold;}
+        .input-time { width: 75px; padding: 6px; border: 1px solid var(--border-color); border-radius: 6px; text-align: center; font-family: monospace; font-size: 13px;}
 
         .icon-btn { cursor: pointer; color: #8C8C8C; font-size: 16px; border: none; background: transparent; padding: 4px; border-radius: 4px; }
         .icon-btn:hover { background: #F0F0F0; color: var(--text-main); }
@@ -87,7 +88,6 @@
         .message-row.other-side .msg-content-wrapper { align-items: flex-start; }
         .message-row.my-side .msg-content-wrapper { align-items: flex-end; }
 
-        /* 气泡增加 white-space: pre-wrap; 完美还原多行文本和换行 */
         .message-bubble { padding: 12px 16px; border-radius: 10px; line-height: 1.5; font-size: 14px; word-wrap: break-word; position: relative; white-space: pre-wrap; }
         .message-row.other-side .message-bubble { background: var(--other-bg); color: #333; border-top-left-radius: 2px; }
         .message-row.my-side .message-bubble { background: var(--my-bg); color: #FFF; border-top-right-radius: 2px; }
@@ -114,8 +114,8 @@
     <div id="setup-view">
         <div class="setup-header">
             <div class="header-title">
-                <h2>对话演练 V9</h2>
-                <p>自动过滤多余代码，精准提取角色与时间</p>
+                <h2>对话演练 V10</h2>
+                <p>真实时间戳引擎，自动计算发言间隔</p>
             </div>
             
             <div class="role-selector">
@@ -133,7 +133,7 @@
         <div class="setup-body">
             <div class="sidebar">
                 <h4>✨ 强力脱水解析</h4>
-                <p>直接粘贴后台提取的原始文本。系统会自动过滤掉“客户端信息、实时聊天”等无关内容，只保留姓名和对话内容。</p>
+                <p>直接粘贴后台提取的原始文本。系统会自动过滤掉“客户端信息、实时聊天”等无关内容，只保留姓名、时间和对话内容。</p>
                 <textarea id="smart-paste-input" placeholder="请在此处直接粘贴杂乱的后台聊天记录..."></textarea>
                 <button class="btn-parse" onclick="smartParseText()">✨ 一键智能脱水解析</button>
             </div>
@@ -171,10 +171,18 @@
         renderTimeline(); 
     }
 
-    // 默认空剧本，等待用户粘贴
     let scriptSteps = [];
 
-    // --- 【升级版】多行强力脱水解析算法 ---
+    // --- 时间字符串转秒数辅助函数 ---
+    function timeToSec(str) {
+        if (!str) return 0;
+        let parts = str.split(':').map(Number);
+        if (parts.length === 3) return parts[0]*3600 + parts[1]*60 + parts[2];
+        if (parts.length === 2) return parts[0]*60 + parts[1];
+        return parts[0] || 0;
+    }
+
+    // --- 多行强力脱水解析算法 ---
     function smartParseText() {
         const text = document.getElementById('smart-paste-input').value;
         if (!text.trim()) return alert("请先粘贴内容！");
@@ -183,25 +191,21 @@
         let textBlocks = [];
         let currentBlock = null;
         
-        // 正则：匹配时间行，例如 2026/03/03 10:01:03 或单纯的 10:01:03
         const isTimeLine = (str) => /(?:\d{4}\/\d{2}\/\d{2}\s+)?(\d{2}:\d{2}(?::\d{2})?)/.test(str);
 
         for (let i = 0; i < lines.length; i++) {
             const line = lines[i];
-            if (!line) continue; // 跳过空行
+            if (!line) continue; 
             
-            // 强力过滤：忽略无意义单字符、固定废话标签、设备信息等
             if (line === 'h' || line === 'E' || line === '实时聊天' || line.startsWith('客户端设备信息')) {
                 continue;
             }
 
-            // 如果当前行是时间戳，说明遇到了新的发言区块
             if (isTimeLine(line)) {
                 let name = "";
                 let timeMatch = line.match(/(?:\d{4}\/\d{2}\/\d{2}\s+)?(\d{2}:\d{2}(?::\d{2})?)/);
                 let timeStr = timeMatch[1]; 
                 
-                // 往上回溯寻找发言人姓名 (跳过被过滤掉的废话)
                 let nameLineIndex = i - 1;
                 while(nameLineIndex >= 0 && (!lines[nameLineIndex] || lines[nameLineIndex] === '实时聊天' || lines[nameLineIndex] === 'h' || lines[nameLineIndex] === 'E' || lines[nameLineIndex].startsWith('客户端设备'))) {
                     nameLineIndex--;
@@ -209,7 +213,6 @@
                 
                 if (nameLineIndex >= 0) {
                     name = lines[nameLineIndex];
-                    // 如果算法把上一行的名字误认为是上一段的正文，在这里把它剔除出来
                     if (currentBlock && currentBlock.content.length > 0) {
                         if (currentBlock.content[currentBlock.content.length - 1] === name) {
                             currentBlock.content.pop();
@@ -217,56 +220,38 @@
                     }
                 }
 
-                // 智能身份判定：但凡包含 End User，一律归为【客户】，其他的全是【客服】
                 let role = (name.toLowerCase().includes('end user') || name.includes('客户') || name.includes('用户')) ? '客户' : '客服';
 
                 currentBlock = { role: role, timeStr: timeStr, content: [] };
                 textBlocks.push(currentBlock);
             } 
             else if (currentBlock) {
-                // 如果不是时间行，也不是废话行，那就全是这段对话的正文
                 currentBlock.content.push(line);
             }
         }
 
         let newSteps = [];
-        let lastTimeInSeconds = 0;
 
-        // 处理提取出来的区块
         textBlocks.forEach(block => {
-            let contentStr = block.content.join('\n').trim(); // 完美保留换行符
+            let contentStr = block.content.join('\n').trim(); 
             if (!contentStr) return; 
-
-            let parts = block.timeStr.split(':').map(Number);
-            let currentSeconds = 0;
-            if (parts.length === 3) currentSeconds = parts[0]*3600 + parts[1]*60 + parts[2];
-            else if (parts.length === 2) currentSeconds = parts[0]*60 + parts[1];
-            
-            let delay = 2; // 默认延时
-            if (lastTimeInSeconds > 0 && currentSeconds >= lastTimeInSeconds) {
-                delay = currentSeconds - lastTimeInSeconds;
-            }
-            lastTimeInSeconds = currentSeconds;
 
             newSteps.push({
                 id: Date.now() + Math.random(),
                 role: block.role,
                 content: contentStr,
-                delay: delay > 0 ? delay : 2, // 如果间隔太短，保底2秒延时，增强演练真实感
+                timeStr: block.timeStr, // 直接保存真实时间戳
                 mode: block.role === myGlobalRole ? 'manual' : 'auto'
             });
         });
 
-        if (newSteps.length === 0) {
-            return alert("未能提取出有效对话，请检查文本格式是否包含时间和发言人。");
-        }
+        if (newSteps.length === 0) return alert("未能提取出有效对话，请检查文本格式。");
 
         if (scriptSteps.length === 0) scriptSteps = newSteps;
         else scriptSteps = scriptSteps.concat(newSteps);
         
         renderTimeline();
         document.getElementById('smart-paste-input').value = '';
-        alert("🎉 解析成功！已自动提取 " + newSteps.length + " 条有效对话，并过滤了多余乱码。");
     }
 
     // --- 配置面板渲染 ---
@@ -293,9 +278,9 @@
                     <option value="auto" ${step.mode === 'auto' ? 'selected' : ''}>系统自动发</option>
                     <option value="manual" ${step.mode === 'manual' ? 'selected' : ''}>实战我来敲</option>
                 </select>
-                <textarea class="input-content" placeholder="${step.mode === 'manual' ? '输入你的任务提示' : '输入系统要发的内容...'}" onchange="updateStep(${step.id}, 'content', this.value)">${step.content || ''}</textarea>
-                <div class="delay-wrapper" style="opacity: ${step.mode === 'manual' ? 0.3 : 1}; pointer-events: ${step.mode === 'manual' ? 'none' : 'auto'};">
-                    延时 <input type="number" class="input-delay" min="0" value="${step.delay}" onchange="updateStep(${step.id}, 'delay', this.value)"> 秒
+                <textarea class="input-content" placeholder="填写当是对局发送的内容..." onchange="updateStep(${step.id}, 'content', this.value)">${step.content || ''}</textarea>
+                <div class="time-wrapper">
+                    时间 <input type="text" class="input-time" value="${step.timeStr || '10:00:00'}" onchange="updateStep(${step.id}, 'timeStr', this.value)">
                 </div>
                 <button class="icon-btn danger" onclick="deleteStep(${step.id})" title="删除">🗑️</button>
             `;
@@ -304,14 +289,22 @@
     }
 
     function addBlankStep() {
-        scriptSteps.push({ id: Date.now(), role: myGlobalRole === '客服' ? '客户' : '客服', mode: 'auto', content: '', delay: 2 });
+        let newTime = "10:00:00";
+        if(scriptSteps.length > 0) {
+            // 如果已有对话，新增的这行默认在上一行时间基础上加 1 分钟
+            let lastSec = timeToSec(scriptSteps[scriptSteps.length-1].timeStr) + 60;
+            let h = Math.floor(lastSec/3600), m = Math.floor((lastSec%3600)/60), s = lastSec%60;
+            newTime = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+        }
+        scriptSteps.push({ id: Date.now(), role: myGlobalRole === '客服' ? '客户' : '客服', mode: 'auto', content: '', timeStr: newTime });
         renderTimeline();
     }
+
     function deleteStep(id) { scriptSteps = scriptSteps.filter(s => s.id !== id); renderTimeline(); }
     function updateStep(id, field, value) { 
         const step = scriptSteps.find(s => s.id === id); 
         if (step) {
-            step[field] = field === 'delay' ? Number(value) : value; 
+            step[field] = value; 
             if (field === 'role') step.mode = value === myGlobalRole ? 'manual' : 'auto';
             renderTimeline();
         }
@@ -321,11 +314,6 @@
 
     // --- 演练播放器核心逻辑 ---
     let isSimulating = false, timerInterval = null, secondsElapsed = 0, currentSleepReject = null;
-
-    const getNowTime = () => {
-        const d = new Date();
-        return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')}`;
-    };
 
     const sleep = (ms) => new Promise((resolve, reject) => {
         const timeout = setTimeout(resolve, ms);
@@ -341,7 +329,8 @@
         }, 1000);
     }
 
-    function renderMessage(role, content) {
+    // 渲染消息时，直接提取真实设置的时间戳 (timeStr)
+    function renderMessage(role, content, timeStr) {
         const chatBox = document.getElementById('chat-box');
         const isMySide = (role === myGlobalRole); 
         const msgClass = isMySide ? 'my-side' : 'other-side';
@@ -354,7 +343,7 @@
             <div class="avatar ${isMySide ? 'my-avatar' : 'other-avatar'}">${avatarIcon}</div>
             <div class="msg-content-wrapper">
                 <div class="message-bubble">${content}${statusIconHtml}</div>
-                <div class="msg-meta">${role} • ${getNowTime()}</div>
+                <div class="msg-meta">${role} • ${timeStr}</div>
             </div>
         `;
         chatBox.appendChild(msgDiv);
@@ -377,11 +366,11 @@
         const el = document.getElementById(indicatorId); if(el) el.remove();
     }
 
-    function waitForUserReply(instruction) {
+    function waitForUserReply() {
         return new Promise((resolve) => {
             const input = document.getElementById('chat-input'), btn = document.getElementById('send-btn');
             input.disabled = false; btn.disabled = false;
-            input.placeholder = "请回复: " + (instruction.length > 20 ? instruction.substring(0,20)+'...' : instruction); 
+            input.placeholder = "轮到你发言，请在此处输入..."; 
             input.focus();
 
             const submit = () => {
@@ -412,17 +401,31 @@
         
         isSimulating = true; startTimer();
 
-        for (const step of scriptSteps) {
+        for (let i = 0; i < scriptSteps.length; i++) {
+            const step = scriptSteps[i];
             if (!isSimulating) break;
+
+            // 根据前后的时间戳，计算系统需要等待的真实延时
+            let delaySec = 1; // 默认给1秒缓冲
+            if (i > 0) {
+                let prevSec = timeToSec(scriptSteps[i-1].timeStr);
+                let currSec = timeToSec(step.timeStr);
+                let diff = currSec - prevSec;
+                if (diff < 0) diff += 86400; // 处理跨零点的情况
+                delaySec = Math.max(0, diff);
+            }
             
             if (step.mode === 'manual') {
-                const userInputText = await waitForUserReply(step.content);
+                // 如果是需要我方实战手敲，不展示打字动画，直接解锁键盘等待输入
+                const userInputText = await waitForUserReply();
                 if(!isSimulating) break; 
-                renderMessage(step.role, userInputText);
+                // 发送完毕后，气泡依然展示剧本里预设的标准时间戳
+                renderMessage(step.role, userInputText, step.timeStr);
             } else {
-                await playTypingAnimation(step.delay * 1000, step.role);
+                // 如果是系统发，展示精准计算时长的打字动画
+                await playTypingAnimation(delaySec * 1000, step.role);
                 if(!isSimulating) break; 
-                renderMessage(step.role, step.content || "[空]");
+                renderMessage(step.role, step.content || "[空]", step.timeStr);
             }
         }
         if (isSimulating) {
