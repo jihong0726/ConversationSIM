@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>对话演练 V7 (宽屏高效版)</title>
+    <title>对话演练 V8 (智能解析版)</title>
     <style>
         :root {
             --primary-color: #1677FF; 
@@ -11,111 +11,78 @@
             --other-bg: #FFFFFF;
             --my-bg: var(--primary-color);
             --danger-color: #FF4D4F;
-            --danger-hover: #FF7875;
             --bg-color: #E4E8EE;
             --border-color: #D9D9D9;
             --text-main: #333333;
-            --text-secondary: #666666;
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            background-color: var(--bg-color);
-            margin: 0; padding: 20px;
-            display: flex; justify-content: center;
-            height: 100vh; box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            background-color: var(--bg-color); margin: 0; padding: 20px;
+            display: flex; justify-content: center; height: 100vh; box-sizing: border-box;
         }
 
-        /* 扩展为桌面级宽屏容器 */
         .container {
-            width: 100%; max-width: 1200px;
-            background: #FFFFFF; border-radius: 12px;
-            box-shadow: 0 12px 40px rgba(0,0,0,0.08);
-            display: flex; flex-direction: column;
-            overflow: hidden; height: 100%;
+            width: 100%; max-width: 1200px; background: #FFFFFF; border-radius: 12px;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.08); display: flex; flex-direction: column; overflow: hidden; height: 100%;
         }
 
-        /* ================= 视图 1：宽屏配置后台 ================= */
+        /* ================= 视图 1：配置后台 ================= */
         #setup-view { display: flex; flex-direction: column; height: 100%; }
         
-        .setup-header { 
-            padding: 24px 32px; border-bottom: 1px solid var(--border-color); 
-            display: flex; justify-content: space-between; align-items: center; background: #FAFAFA;
-        }
+        .setup-header { padding: 20px 32px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; background: #FAFAFA; }
         .header-title h2 { margin: 0 0 8px 0; color: var(--text-main); font-size: 22px; }
-        .header-title p { margin: 0; color: var(--text-secondary); font-size: 14px; }
+        .header-title p { margin: 0; color: #666; font-size: 14px; }
         
-        /* 顶部操作区 */
-        .header-actions { display: flex; gap: 16px; align-items: center; }
-        .btn-primary { background: var(--primary-color); color: white; border: none; padding: 10px 24px; border-radius: 6px; font-size: 15px; font-weight: 600; cursor: pointer; transition: 0.2s; box-shadow: 0 2px 0 rgba(5, 145, 255, 0.1); }
+        /* 身份选择器 (核心新增) */
+        .role-selector { display: flex; align-items: center; gap: 10px; background: #E6F4FF; padding: 8px 16px; border-radius: 8px; border: 1px solid #91CAFF; }
+        .role-selector select { padding: 6px; border-radius: 4px; border: 1px solid #1677FF; color: #1677FF; font-weight: bold; outline: none; }
+
+        .btn-primary { background: var(--primary-color); color: white; border: none; padding: 10px 24px; border-radius: 6px; font-size: 15px; font-weight: bold; cursor: pointer; transition: 0.2s; }
         .btn-primary:hover { background: var(--primary-hover); }
-        .btn-outline { background: white; border: 1px solid var(--border-color); color: var(--text-main); padding: 10px 20px; border-radius: 6px; font-size: 14px; cursor: pointer; transition: 0.2s; }
-        .btn-outline:hover { border-color: var(--primary-color); color: var(--primary-color); }
 
         .setup-body { display: flex; flex: 1; overflow: hidden; }
 
-        /* 极客导入侧边栏 (折叠到左侧) */
-        .sidebar { width: 280px; border-right: 1px solid var(--border-color); padding: 24px; background: #FAFAFA; display: flex; flex-direction: column; }
-        .sidebar h4 { margin: 0 0 16px 0; color: var(--text-main); font-size: 15px; }
-        .sidebar textarea { flex: 1; width: 100%; box-sizing: border-box; padding: 12px; border-radius: 6px; border: 1px solid var(--border-color); resize: none; font-family: monospace; font-size: 13px; margin-bottom: 16px; background: #FFF; }
+        /* 智能解析侧边栏 */
+        .sidebar { width: 300px; border-right: 1px solid var(--border-color); padding: 24px; background: #FAFAFA; display: flex; flex-direction: column; }
+        .sidebar h4 { margin: 0 0 10px 0; color: var(--text-main); font-size: 16px; }
+        .sidebar p { margin: 0 0 16px 0; color: #888; font-size: 12px; line-height: 1.5; }
+        .sidebar textarea { flex: 1; width: 100%; box-sizing: border-box; padding: 12px; border-radius: 6px; border: 1px solid var(--border-color); resize: none; font-size: 13px; margin-bottom: 16px; line-height: 1.5; }
+        .btn-parse { background: #52C41A; color: white; border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .btn-parse:hover { background: #389E0D; }
 
-        /* 核心内容区 (横向列表) */
+        /* 时间轴核心区 */
         .main-content { flex: 1; padding: 24px 32px; overflow-y: auto; background: #FFF; }
-        
         .timeline-container { display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px; }
 
-        /* 横向紧凑型步骤条 (核心优化) */
-        .step-item { 
-            display: flex; align-items: center; gap: 12px; 
-            padding: 12px 16px; border: 1px solid var(--border-color); border-radius: 8px; 
-            background: #FAFAFA; transition: all 0.2s; position: relative;
-        }
+        .step-item { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border: 1px solid var(--border-color); border-radius: 8px; background: #FAFAFA; transition: 0.2s; }
         .step-item:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.05); border-color: #D9D9D9; background: #FFF; }
-        .step-item.dragging { opacity: 0.4; }
-        .step-item.drag-over { outline: 2px dashed var(--primary-color); outline-offset: 2px; }
-
-        .drag-handle { cursor: grab; color: #BFBFBF; font-size: 18px; padding: 0 4px; }
-        .drag-handle:active { cursor: grabbing; }
-
-        /* 标签 */
-        .badge { padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: bold; width: 65px; text-align: center; flex-shrink: 0; }
-        .badge.auto { background: #F6FFED; border: 1px solid #B7EB8F; color: #52C41A; }
-        .badge.manual { background: #E6F4FF; border: 1px solid #91CAFF; color: var(--primary-color); }
-
-        /* 表单控件 */
-        .step-item select { padding: 8px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 14px; outline: none; background: #FFF; }
-        .step-item select:focus, .step-item input:focus { border-color: var(--primary-color); }
+        
+        .step-item select { padding: 8px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 13px; outline: none; background: #FFF; }
         .input-content { flex: 1; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 14px; outline: none; }
-        .delay-wrapper { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-secondary); width: 130px; justify-content: flex-end;}
-        .input-delay { width: 50px; padding: 6px; border: 1px solid var(--border-color); border-radius: 6px; text-align: center; }
+        .delay-wrapper { display: flex; align-items: center; gap: 6px; font-size: 13px; color: #666; }
+        .input-delay { width: 45px; padding: 6px; border: 1px solid var(--border-color); border-radius: 6px; text-align: center; }
 
-        /* 操作按钮组 */
-        .item-actions { display: flex; gap: 8px; align-items: center; border-left: 1px solid #E8E8E8; padding-left: 12px; margin-left: 4px; }
-        .icon-btn { cursor: pointer; color: #8C8C8C; font-size: 16px; border: none; background: transparent; padding: 4px; border-radius: 4px; transition: 0.2s; }
+        .icon-btn { cursor: pointer; color: #8C8C8C; font-size: 16px; border: none; background: transparent; padding: 4px; border-radius: 4px; }
         .icon-btn:hover { background: #F0F0F0; color: var(--text-main); }
         .icon-btn.danger:hover { background: #FFF1F0; color: var(--danger-color); }
 
-        /* ================= 视图 2：演练系统 (手机模拟器) ================= */
+        /* ================= 视图 2：演练系统 ================= */
         #drill-view { display: none; align-items: center; justify-content: center; height: 100%; background: #E4E8EE; position: relative; }
+        .floating-back-btn { position: absolute; top: 24px; left: 24px; background: #FFF; border: 1px solid var(--border-color); padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.05); color: var(--text-main); z-index: 10; }
         
-        /* 左上角返回按钮 */
-        .floating-back-btn { position: absolute; top: 24px; left: 24px; background: #FFF; border: 1px solid var(--border-color); padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.05); color: var(--text-main); z-index: 10; transition: 0.2s; }
-        .floating-back-btn:hover { color: var(--danger-color); border-color: var(--danger-color); }
-
-        /* 手机外壳 */
-        .phone-mockup { width: 420px; height: 90%; background: #FFF; border-radius: 40px; box-shadow: 0 24px 80px rgba(0,0,0,0.15); border: 8px solid #333; display: flex; flex-direction: column; overflow: hidden; position: relative; }
-        
+        .phone-mockup { width: 420px; height: 90%; background: #FFF; border-radius: 40px; box-shadow: 0 24px 80px rgba(0,0,0,0.15); border: 8px solid #333; display: flex; flex-direction: column; overflow: hidden; }
         #dashboard-header { background: #FAFAFA; padding: 16px 20px; display: flex; justify-content: center; align-items: center; border-bottom: 1px solid var(--border-color); }
         .timer-badge { color: var(--primary-color); font-weight: bold; font-family: monospace; font-size: 16px; background: #E6F4FF; padding: 6px 16px; border-radius: 20px;}
 
         #chat-box { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 20px; background-color: #F4F6F8; }
 
-        /* 聊天气泡布局 */
+        /* 完美左右布局 (由全局身份决定) */
         .message-row { display: flex; width: 100%; }
         .message-row.other-side { flex-direction: row; justify-content: flex-start; }
         .message-row.my-side { flex-direction: row-reverse; justify-content: flex-start; }
 
-        .avatar { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: bold; color: white; margin: 0 10px; flex-shrink: 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1);}
+        .avatar { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: bold; color: white; margin: 0 10px; flex-shrink: 0; }
         .avatar.other-avatar { background-color: #1A1D20; }
         .avatar.my-avatar { background-color: var(--primary-color); }
 
@@ -123,7 +90,7 @@
         .message-row.other-side .msg-content-wrapper { align-items: flex-start; }
         .message-row.my-side .msg-content-wrapper { align-items: flex-end; }
 
-        .message-bubble { padding: 12px 16px; border-radius: 10px; line-height: 1.5; font-size: 14px; word-wrap: break-word; position: relative; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        .message-bubble { padding: 12px 16px; border-radius: 10px; line-height: 1.5; font-size: 14px; word-wrap: break-word; position: relative; }
         .message-row.other-side .message-bubble { background: var(--other-bg); color: #333; border-top-left-radius: 2px; }
         .message-row.my-side .message-bubble { background: var(--my-bg); color: #FFF; border-top-right-radius: 2px; }
 
@@ -139,11 +106,10 @@
 
         /* 输入区 */
         #input-area { display: flex; padding: 12px; background: #FFF; border-top: 1px solid var(--border-color); gap: 10px; align-items: center;}
-        #chat-input { flex: 1; padding: 12px 16px; border: 1px solid #E8E8E8; background: #F4F6F8; border-radius: 24px; font-size: 14px; outline: none; transition: 0.2s;}
+        #chat-input { flex: 1; padding: 12px 16px; border: 1px solid #E8E8E8; background: #F4F6F8; border-radius: 24px; font-size: 14px; outline: none;}
         #chat-input:focus { border-color: var(--primary-color); background: #FFF; }
-        #send-btn { background: var(--primary-color); color: white; border: none; border-radius: 24px; padding: 0 20px; height: 40px; font-weight: bold; cursor: pointer; transition: 0.2s; }
-        #send-btn:hover:not(:disabled) { background: var(--primary-hover); }
-        #send-btn:disabled, #chat-input:disabled { background: #F0F0F0; cursor: not-allowed; border-color: #E8E8E8; color: #999; }
+        #send-btn { background: var(--primary-color); color: white; border: none; border-radius: 24px; padding: 0 20px; height: 40px; font-weight: bold; cursor: pointer; }
+        #send-btn:disabled, #chat-input:disabled { background: #F0F0F0; cursor: not-allowed; color: #999; border:none; }
     </style>
 </head>
 <body>
@@ -152,26 +118,34 @@
     <div id="setup-view">
         <div class="setup-header">
             <div class="header-title">
-                <h2>对话演练 V7 后台</h2>
-                <p>横向规则引擎，可视化极速编排交互剧本</p>
+                <h2>对话演练 V8 后台</h2>
+                <p>粘贴聊天记录 -> 自动解析剧本 -> 开始演练</p>
             </div>
-            <div class="header-actions">
-                <button class="btn-outline" onclick="addStep('auto')">➕ 对方发言</button>
-                <button class="btn-outline" onclick="addStep('manual')">🗣️ 我方回复</button>
-                <button class="btn-primary" onclick="startDrill()">🚀 启动演练</button>
+            
+            <div class="role-selector">
+                <span>本次演练我将扮演：</span>
+                <select id="global-role" onchange="updateGlobalRole()">
+                    <option value="客服" selected>客服</option>
+                    <option value="客户">客户</option>
+                </select>
+                <span style="font-size:12px; color:#666;">(你的消息将固定在右边)</span>
             </div>
+
+            <button class="btn-primary" onclick="startDrill()">🚀 启动演练</button>
         </div>
         
         <div class="setup-body">
             <div class="sidebar">
-                <h4>🛠️ 极客面板</h4>
-                <textarea id="json-import-input" placeholder='输入 JSON 数组一键导入剧本...'></textarea>
-                <button class="btn-outline" style="width: 100%;" onclick="importJSON()">⬇️ 覆盖导入</button>
+                <h4>✨ 智能粘贴解析</h4>
+                <p>直接粘贴带时间或名字的记录，例如：<br><i>10:02 客户: 提现没到<br>10:05 客服: 稍等</i><br>算法会自动分离时间和计算延时。</p>
+                <textarea id="smart-paste-input" placeholder="请在此处粘贴聊天记录或普通文本..."></textarea>
+                <button class="btn-parse" onclick="smartParseText()">✨ 一键智能解析</button>
             </div>
             
             <div class="main-content">
                 <div id="timeline-container" class="timeline-container">
                     </div>
+                <button class="icon-btn" onclick="addBlankStep()" style="border:1px dashed #CCC; padding:8px 16px; border-radius:6px; width:100%;">➕ 手动添加一行空剧本</button>
             </div>
         </div>
     </div>
@@ -195,14 +169,89 @@
 </div>
 
 <script>
-    // 默认剧本
+    // 全局身份变量：决定左右布局
+    let myGlobalRole = '客服';
+
+    function updateGlobalRole() {
+        myGlobalRole = document.getElementById('global-role').value;
+        renderTimeline(); // 刷新配置界面，更新动作模式
+    }
+
     let scriptSteps = [
-        { id: 1, type: 'auto', role: '客户', content: '您好，我提现的资金一直没到账，怎么回事？', delay: 1 },
-        { id: 2, type: 'manual', role: '客服', instruction: '请安抚客户并告知正在查询中' },
-        { id: 3, type: 'auto', role: '客户', content: '那大概还需要等多久？', delay: 2 }
+        { id: 1, role: '客户', mode: 'auto', content: '您好，我提现的资金一直没到账。', delay: 1 },
+        { id: 2, role: '客服', mode: 'manual', content: '请安抚客户并告知正在查询中...', delay: 2 }
     ];
 
-    // --- 极简横向面板渲染逻辑 ---
+    // --- 极速解析算法核心 ---
+    function smartParseText() {
+        const text = document.getElementById('smart-paste-input').value;
+        if (!text.trim()) return alert("请先粘贴内容！");
+
+        const lines = text.split('\n').filter(l => l.trim() !== '');
+        let lastTimeInSeconds = 0;
+        let newSteps = [];
+
+        lines.forEach(line => {
+            let role = '客户'; // 默认
+            let content = line.trim();
+            let delay = 2; // 默认延时2秒
+
+            // 1. 尝试提取时间 (匹配 10:01 或 10:01:42)
+            const timeRegex = /(?:[01]?\d|2[0-3]):[0-5]\d(?::[0-5]\d)?/;
+            const timeMatch = content.match(timeRegex);
+            if (timeMatch) {
+                const timeStr = timeMatch[0];
+                const parts = timeStr.split(':').map(Number);
+                let currentSeconds = 0;
+                if (parts.length === 3) currentSeconds = parts[0]*3600 + parts[1]*60 + parts[2];
+                if (parts.length === 2) currentSeconds = parts[0]*60 + parts[1];
+
+                // 只有同一小时内/时间递增时，才计算真实延时秒数
+                if (lastTimeInSeconds > 0 && currentSeconds >= lastTimeInSeconds) {
+                    delay = currentSeconds - lastTimeInSeconds;
+                }
+                lastTimeInSeconds = currentSeconds;
+                // 从正文中剔除时间
+                content = content.replace(timeStr, '').trim();
+            }
+
+            // 2. 尝试提取角色名称 (通过冒号分割)
+            const colonRegex = /^(.*?)(:|：)(.*)$/;
+            const colonMatch = content.match(colonRegex);
+            if (colonMatch) {
+                const potentialRole = colonMatch[1].trim();
+                // 智能猜测身份
+                if (potentialRole.includes('客服') || potentialRole.includes('William')) role = '客服';
+                else if (potentialRole.includes('客户') || potentialRole.includes('User')) role = '客户';
+                // 剥离名字，只留正文
+                content = colonMatch[3].trim();
+            }
+
+            // 剔除可能多余的括号
+            content = content.replace(/^\[.*?\]\s*/, '').trim();
+
+            newSteps.push({
+                id: Date.now() + Math.random(),
+                role: role,
+                content: content,
+                delay: delay > 0 ? delay : 2, // 防止0秒或负数
+                mode: role === myGlobalRole ? 'manual' : 'auto' // 根据当前我的身份，自动分配是系统发还是我打字
+            });
+        });
+
+        // 拼接或覆盖剧本
+        if (scriptSteps.length === 0) {
+            scriptSteps = newSteps;
+        } else {
+            scriptSteps = scriptSteps.concat(newSteps);
+        }
+        
+        renderTimeline();
+        document.getElementById('smart-paste-input').value = '';
+        alert("🎉 解析成功！已自动填充至右侧剧本列表。");
+    }
+
+    // --- 配置面板渲染逻辑 ---
     function renderTimeline() {
         const container = document.getElementById('timeline-container');
         container.innerHTML = '';
@@ -210,93 +259,45 @@
         scriptSteps.forEach((step, index) => {
             const item = document.createElement('div');
             item.className = 'step-item';
-            item.dataset.index = index;
-            item.draggable = true;
-            item.addEventListener('dragstart', onDragStart);
-            item.addEventListener('dragend', onDragEnd);
-            item.addEventListener('dragover', onDragOver);
-            item.addEventListener('dragleave', onDragLeave);
-            item.addEventListener('drop', onDrop);
 
-            if (step.type === 'auto') {
-                item.innerHTML = `
-                    <div class="drag-handle">⋮⋮</div>
-                    <div class="badge auto">自动触发</div>
-                    <select onchange="updateStep(${step.id}, 'role', this.value)">
-                        <option value="客户" ${step.role === '客户' ? 'selected' : ''}>客户</option>
-                        <option value="客服" ${step.role === '客服' ? 'selected' : ''}>客服</option>
-                    </select>
-                    <input type="text" class="input-content" value="${step.content || ''}" placeholder="输入对方发送的内容..." onchange="updateStep(${step.id}, 'content', this.value)">
-                    <div class="delay-wrapper">
-                        延时 <input type="number" class="input-delay" min="0" value="${step.delay}" onchange="updateStep(${step.id}, 'delay', this.value)"> 秒
-                    </div>
-                    <div class="item-actions">
-                        <button class="icon-btn" onclick="duplicateStep(${index})" title="复制">⧉</button>
-                        <button class="icon-btn danger" onclick="deleteStep(${step.id})" title="删除">🗑️</button>
-                    </div>
-                `;
-            } else {
-                item.innerHTML = `
-                    <div class="drag-handle">⋮⋮</div>
-                    <div class="badge manual">等待输入</div>
-                    <select onchange="updateStep(${step.id}, 'role', this.value)">
-                        <option value="客服" ${step.role === '客服' ? 'selected' : ''}>客服</option>
-                        <option value="客户" ${step.role === '客户' ? 'selected' : ''}>客户</option>
-                    </select>
-                    <input type="text" class="input-content" value="${step.instruction || ''}" placeholder="输入任务提示 (如：向客户道歉)" onchange="updateStep(${step.id}, 'instruction', this.value)">
-                    <div class="delay-wrapper" style="opacity: 0.3; pointer-events: none;">
-                        延时 <input type="number" class="input-delay" value="0" disabled> 秒
-                    </div>
-                    <div class="item-actions">
-                        <button class="icon-btn" onclick="duplicateStep(${index})" title="复制">⧉</button>
-                        <button class="icon-btn danger" onclick="deleteStep(${step.id})" title="删除">🗑️</button>
-                    </div>
-                `;
-            }
+            // 智能判定：如果这步的角色 == 我的全局身份，那默认最好是 'manual'(我来手打)
+            // 当然，如果用户强制选了 auto 也可以。
+            
+            item.innerHTML = `
+                <div style="width: 20px; color:#BFBFBF; font-weight:bold;">${index+1}.</div>
+                <select onchange="updateStep(${step.id}, 'role', this.value)" style="width: 80px;">
+                    <option value="客服" ${step.role === '客服' ? 'selected' : ''}>客服</option>
+                    <option value="客户" ${step.role === '客户' ? 'selected' : ''}>客户</option>
+                </select>
+                <select onchange="updateStep(${step.id}, 'mode', this.value)" style="width: 105px; background:${step.mode === 'manual' ? '#E6F4FF' : '#F6FFED'}; border-color:${step.mode === 'manual' ? '#91CAFF' : '#B7EB8F'}; color:${step.mode === 'manual' ? '#1677FF' : '#52C41A'}">
+                    <option value="auto" ${step.mode === 'auto' ? 'selected' : ''}>系统自动发</option>
+                    <option value="manual" ${step.mode === 'manual' ? 'selected' : ''}>实战我来敲</option>
+                </select>
+                <input type="text" class="input-content" value="${step.content || ''}" placeholder="${step.mode === 'manual' ? '输入你的任务提示 (如:安抚客户)' : '输入系统要发的内容...'}" onchange="updateStep(${step.id}, 'content', this.value)">
+                <div class="delay-wrapper" style="opacity: ${step.mode === 'manual' ? 0.3 : 1}; pointer-events: ${step.mode === 'manual' ? 'none' : 'auto'};">
+                    延时 <input type="number" class="input-delay" min="0" value="${step.delay}" onchange="updateStep(${step.id}, 'delay', this.value)"> 秒
+                </div>
+                <button class="icon-btn danger" onclick="deleteStep(${step.id})" title="删除">🗑️</button>
+            `;
             container.appendChild(item);
         });
     }
 
-    function addStep(type) {
-        const newId = Date.now();
-        if (type === 'auto') scriptSteps.push({ id: newId, type: 'auto', role: '客户', content: '', delay: 1 });
-        else scriptSteps.push({ id: newId, type: 'manual', role: '客服', instruction: '请输入...' });
+    function addBlankStep() {
+        scriptSteps.push({ id: Date.now(), role: myGlobalRole === '客服' ? '客户' : '客服', mode: 'auto', content: '', delay: 2 });
         renderTimeline();
     }
-
     function deleteStep(id) { scriptSteps = scriptSteps.filter(s => s.id !== id); renderTimeline(); }
-    function updateStep(id, field, value) { const step = scriptSteps.find(s => s.id === id); if (step) step[field] = field === 'delay' ? Number(value) : value; }
-    
-    function duplicateStep(index) {
-        const copy = JSON.parse(JSON.stringify(scriptSteps[index]));
-        copy.id = Date.now();
-        scriptSteps.splice(index + 1, 0, copy);
-        renderTimeline();
-    }
-
-    // ===== 拖拽排序逻辑 =====
-    let dragFromIndex = null;
-    function getIndex(e) { return Number(e.currentTarget.dataset.index); }
-    function onDragStart(e) { dragFromIndex = getIndex(e); e.currentTarget.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move'; }
-    function onDragEnd(e) { dragFromIndex = null; document.querySelectorAll('.step-item').forEach(el => el.classList.remove('dragging', 'drag-over')); }
-    function onDragOver(e) { e.preventDefault(); e.currentTarget.classList.add('drag-over'); }
-    function onDragLeave(e) { e.currentTarget.classList.remove('drag-over'); }
-    function onDrop(e) {
-        e.preventDefault(); e.currentTarget.classList.remove('drag-over');
-        const toIndex = getIndex(e);
-        if (dragFromIndex === null || dragFromIndex === toIndex) return;
-        const moved = scriptSteps.splice(dragFromIndex, 1)[0];
-        scriptSteps.splice(toIndex, 0, moved);
-        renderTimeline();
-    }
-
-    function importJSON() {
-        try {
-            const input = document.getElementById('json-import-input').value;
-            const parsed = JSON.parse(input);
-            scriptSteps = parsed.map((item, index) => ({ id: Date.now() + index, ...item }));
-            renderTimeline(); alert("导入成功！"); document.getElementById('json-import-input').value = "";
-        } catch(e) { alert("JSON 格式错误，请检查！"); }
+    function updateStep(id, field, value) { 
+        const step = scriptSteps.find(s => s.id === id); 
+        if (step) {
+            step[field] = field === 'delay' ? Number(value) : value; 
+            // 如果修改了 role，智能联动修改 mode
+            if (field === 'role') {
+                step.mode = value === myGlobalRole ? 'manual' : 'auto';
+            }
+            renderTimeline();
+        }
     }
 
     renderTimeline();
@@ -306,7 +307,7 @@
 
     const getNowTime = () => {
         const d = new Date();
-        return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')}`; // 极简时间格式
+        return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')}`;
     };
 
     const sleep = (ms) => new Promise((resolve, reject) => {
@@ -323,9 +324,11 @@
         }, 1000);
     }
 
-    function renderMessage(role, content, type) {
+    function renderMessage(role, content) {
         const chatBox = document.getElementById('chat-box');
-        const isMySide = (type === 'manual');
+        
+        // 【核心布局逻辑】通过判断当前说话的角色是否等于“我选定的全局角色”来决定左右！
+        const isMySide = (role === myGlobalRole); 
         const msgClass = isMySide ? 'my-side' : 'other-side';
         const avatarIcon = role === '客服' ? '服' : '客';
         const statusIconHtml = isMySide ? `<div class="status-icon">✓</div>` : '';
@@ -350,7 +353,8 @@
         const avatarIcon = role === '客服' ? '服' : '客';
         
         const div = document.createElement('div');
-        div.id = indicatorId; div.className = `message-row other-side`;
+        div.id = indicatorId; 
+        div.className = `message-row other-side`; // 动画永远是对方在打字，强制靠左
         div.innerHTML = `<div class="avatar other-avatar">${avatarIcon}</div><div class="msg-content-wrapper"><div class="typing-indicator"><span></span><span></span><span></span></div></div>`;
         chatBox.appendChild(div); chatBox.scrollTop = chatBox.scrollHeight;
         
@@ -362,7 +366,7 @@
         return new Promise((resolve) => {
             const input = document.getElementById('chat-input'), btn = document.getElementById('send-btn');
             input.disabled = false; btn.disabled = false;
-            input.placeholder = instruction || "输入回复..."; input.focus();
+            input.placeholder = instruction || "请输入并发送..."; input.focus();
 
             const submit = () => {
                 const text = input.value.trim(); if(!text) return;
@@ -386,7 +390,7 @@
     }
 
     async function startDrill() {
-        if (scriptSteps.length === 0) return alert("请至少添加一条剧本！");
+        if (scriptSteps.length === 0) return alert("剧本不能为空！");
         document.getElementById('setup-view').style.display = 'none';
         document.getElementById('drill-view').style.display = 'flex';
         
@@ -394,12 +398,15 @@
 
         for (const step of scriptSteps) {
             if (!isSimulating) break;
-            if (step.type === 'manual') {
-                const userInputText = await waitForUserReply(step.instruction);
-                if(!isSimulating) break; renderMessage(step.role, userInputText, 'manual');
+            
+            if (step.mode === 'manual') {
+                const userInputText = await waitForUserReply(step.content);
+                if(!isSimulating) break; 
+                renderMessage(step.role, userInputText);
             } else {
                 await playTypingAnimation(step.delay * 1000, step.role);
-                if(!isSimulating) break; renderMessage(step.role, step.content || "[空]", 'auto');
+                if(!isSimulating) break; 
+                renderMessage(step.role, step.content || "[空]");
             }
         }
         if (isSimulating) {
