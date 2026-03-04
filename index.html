@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>对话演练 V16</title>
+    <title>对话演练 V17</title>
     <style>
         :root {
             --primary-color: #1677FF; 
@@ -45,7 +45,6 @@
         .btn-parse { background: #52C41A; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; }
         .btn-parse:hover { background: #389E0D; }
         
-        /* 新增：沙盒模式按钮 */
         .btn-sandbox { background: #FFF; color: var(--sandbox-color); border: 1px solid var(--sandbox-color); padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; margin-top: 12px; }
         .btn-sandbox:hover { background: #FFF7E6; }
 
@@ -143,8 +142,8 @@
     <div id="setup-view">
         <div class="setup-header">
             <div class="header-title">
-                <h2>对话演练 V16</h2>
-                <p>新增极速沙盒模式：纯文本无脑输入，5秒自动连播感受文字节奏</p>
+                <h2>对话演练 V17</h2>
+                <p>解绑沙盒启动逻辑，先预览排版再开始演练</p>
             </div>
             
             <div class="role-selector">
@@ -162,7 +161,7 @@
                 <textarea id="smart-paste-input" placeholder="输入示例：&#10;你好，在吗？&#10;在的，请问有什么可以帮您？&#10;充值没到账！"></textarea>
                 <button class="btn-parse" onclick="smartParseText()">✨ 一键智能解析</button>
                 
-                <button class="btn-sandbox" onclick="startSandbox()">🏜️ 极速沙盒 (纯文本/5秒连播)</button>
+                <button class="btn-sandbox" onclick="startSandbox()">🏜️ 极速沙盒解析 (自动排版)</button>
             </div>
             
             <div class="main-content">
@@ -246,7 +245,6 @@
         return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
     }
 
-    // --- 标准的智能解析 (包含时间差计算) ---
     function smartParseText() {
         const text = document.getElementById('smart-paste-input').value;
         if (!text.trim()) return alert("请先粘贴内容！");
@@ -304,44 +302,33 @@
         document.getElementById('smart-paste-input').value = '';
     }
 
-    // ==========================================
-    // 核心新增：极速沙盒解析逻辑
-    // ==========================================
+    // --- 修改：沙盒模式仅排版，不再自动跳转 ---
     function startSandbox() {
         const text = document.getElementById('smart-paste-input').value;
         if (!text.trim()) return alert("请先在左侧输入你要体验的纯文字！");
 
-        // 按行分割，过滤空行和废话代码
         const lines = text.split('\n').map(l => l.trim()).filter(l => l !== '' && l !== 'h' && l !== 'E' && l !== '实时聊天' && !l.startsWith('客户端'));
 
         let newSteps = [];
         let baseTime = timeToSec("10:00:00");
-        
-        // 默认让对方先说话
         let currentRole = myGlobalRole === '客服' ? '客户' : '客服'; 
 
         lines.forEach((line, index) => {
             let role = currentRole;
             let content = line;
 
-            // 清理可能存在的时间文本
             content = content.replace(/(?:\d{4}\/\d{2}\/\d{2}\s+)?(\d{2}:\d{2}(?::\d{2})?)/, '').trim();
 
-            // 尝试识别这一行有没有包含身份前缀
             if (content.includes('客户') || content.toLowerCase().includes('user')) {
                 role = '客户';
             } else if (content.includes('客服') || content.includes('William') || content.includes('林伟霖')) {
                 role = '客服';
             } else {
-                // 如果是纯文本，那就一人一句轮流说
                 role = currentRole;
                 currentRole = currentRole === '客服' ? '客户' : '客服';
             }
 
-            // 把名字剥离掉，只留对话
             content = content.replace(/^.*?[：:]/, '').trim();
-
-            // 强制 5 秒间隔
             let timeStr = formatSecToTime(baseTime + (index * 5));
 
             newSteps.push({
@@ -349,7 +336,7 @@
                 role: role,
                 content: content || "...",
                 timeStr: timeStr,
-                mode: 'auto' // 沙盒模式强制全部为“系统自动播”，解放双手感受文案
+                mode: 'auto' 
             });
         });
 
@@ -357,8 +344,8 @@
         renderTimeline();
         document.getElementById('smart-paste-input').value = '';
         
-        // 直接启动演练
-        startDrill();
+        // 移除自动启动功能，让用户自己选择合适确认
+        alert("🏜️ 沙盒剧本已为您自动排版在右侧！\n\n如需体验 5 秒连播的视觉效果，请点击右上角的【启动标准演练】。");
     }
 
     function renderTimeline() {
@@ -459,9 +446,6 @@
     
     renderTimeline();
 
-    // ==========================================
-    // V16 演练播放器核心
-    // ==========================================
     let isSimulating = false;
     let clockInterval = null;
     let currentSleepReject = null;
