@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>对话演练 V2</title>
+    <title>对话演练 V3</title>
     <style>
         :root {
             --primary-color: #0052FF;
@@ -82,7 +82,6 @@
             gap: 12px;
         }
 
-        /* 顶部耗时居中显示 */
         .top-stats {
             display: flex;
             justify-content: center;
@@ -137,14 +136,12 @@
             animation: slideIn 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
         }
 
-        /* 修复后的布局逻辑 */
         .message-row.service {
             justify-content: flex-start;
             flex-direction: row;
         }
 
         .message-row.customer {
-            /* 在 row-reverse 模式下，flex-start 代表从右侧开始排列 */
             justify-content: flex-start; 
             flex-direction: row-reverse;
         }
@@ -206,7 +203,7 @@
 
 <div class="container">
     <div id="start-screen">
-        <h2 style="color: #333; margin-bottom: 8px;">对话演练 V2</h2>
+        <h2 style="color: #333; margin-bottom: 8px;">对话演练 V3</h2>
         <p id="status-message" style="color: #666; margin-bottom: 30px;">就绪，点击下方按钮读取剧本</p>
         <button id="load-start-btn" class="start-btn">载入并开始演练</button>
     </div>
@@ -280,7 +277,10 @@
         btn.innerText = "读取中...";
 
         try {
-            const response = await fetch('./data.json');
+            // 【核心修复】：在请求末尾加时间戳，彻底粉碎浏览器缓存，确保每次都读取最新的 JSON
+            const fetchUrl = './data.json?t=' + new Date().getTime();
+            const response = await fetch(fetchUrl);
+            
             if (!response.ok) throw new Error("HTTP Error");
             const scriptData = await response.json();
 
@@ -315,14 +315,14 @@
             const msgClass = msg.role === '客服' ? 'service' : 'customer';
             msgDiv.className = `message-row ${msgClass}`;
 
-            // 提取 JSON 中你设定的历史时间
-            const displayTime = msg.time || "";
+            // 【核心修复】：智能判断时间是否存在，如果没有时间，就不显示那个小圆点
+            const timeText = msg.time ? ` • ${msg.time}` : "";
 
             msgDiv.innerHTML = `
                 <img src="${avatarUrl}" class="avatar" alt="avatar">
                 <div class="msg-content-wrapper">
                     <div class="message-bubble">${msg.content}</div>
-                    <div class="msg-meta">${msg.role} • ${displayTime}</div>
+                    <div class="msg-meta">${msg.role}${timeText}</div>
                 </div>
             `;
 
