@@ -3,247 +3,257 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>对话演练 V6 (极简高效版)</title>
+    <title>对话演练 V7 (宽屏高效版)</title>
     <style>
         :root {
             --primary-color: #1677FF; 
+            --primary-hover: #4096FF;
             --other-bg: #FFFFFF;
             --my-bg: var(--primary-color);
             --danger-color: #FF4D4F;
-            --bg-color: #F0F2F5;
-            --border-color: #E8E8E8;
+            --danger-hover: #FF7875;
+            --bg-color: #E4E8EE;
+            --border-color: #D9D9D9;
+            --text-main: #333333;
+            --text-secondary: #666666;
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
             background-color: var(--bg-color);
             margin: 0; padding: 20px;
             display: flex; justify-content: center;
             height: 100vh; box-sizing: border-box;
         }
 
+        /* 扩展为桌面级宽屏容器 */
         .container {
-            width: 100%; max-width: 700px;
-            background: #F8F9FA; border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            width: 100%; max-width: 1200px;
+            background: #FFFFFF; border-radius: 12px;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.08);
             display: flex; flex-direction: column;
             overflow: hidden; height: 100%;
-            border: 1px solid var(--border-color);
         }
 
-        /* ================= 视图 1：极简配置中心 ================= */
-        #setup-view { display: flex; flex-direction: column; height: 100%; background: #FFF; }
+        /* ================= 视图 1：宽屏配置后台 ================= */
+        #setup-view { display: flex; flex-direction: column; height: 100%; }
         
-        .setup-header { padding: 20px; border-bottom: 1px solid var(--border-color); text-align: center; }
-        .setup-header h2 { margin: 0 0 5px 0; color: #333; }
-        .setup-header p { margin: 0; color: #666; font-size: 14px; }
-
-        .timeline-builder { flex: 1; overflow-y: auto; padding: 20px; background: #F9F9F9; }
-
-        /* 快捷导入区 */
-        .quick-import-area { margin-bottom: 20px; padding: 15px; background: #E6F4FF; border-radius: 8px; border: 1px dashed #91CAFF; }
-        .quick-import-area h4 { margin: 0 0 10px 0; color: #0050B3; }
-        .quick-import-area textarea { width: 100%; height: 60px; box-sizing: border-box; padding: 8px; border-radius: 4px; border: 1px solid #91CAFF; margin-bottom: 10px; font-family: monospace; }
-        .quick-import-area button { background: #1677FF; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; }
-
-        /* 配置卡片 */
-        .step-card { background: #FFF; border: 1px solid var(--border-color); border-radius: 8px; padding: 15px; margin-bottom: 15px; position: relative; }
-        .step-card.auto-step { border-left: 4px solid #52C41A; }
-        .step-card.manual-step { border-left: 4px solid var(--primary-color); }
-        .step-header { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 14px; font-weight: bold; }
-        .delete-btn { color: var(--danger-color); cursor: pointer; font-weight: normal; }
-        .step-row { display: flex; gap: 10px; margin-bottom: 10px; align-items: center; font-size: 14px; }
-        .step-row select, .step-row input { padding: 8px; border: 1px solid #CCC; border-radius: 4px; }
-        .step-row input[type="text"] { flex: 1; }
-        .step-row input[type="number"] { width: 60px; }
-
-        .add-btns { display: flex; gap: 10px; justify-content: center; padding: 20px 0; }
-        .btn-outline { background: white; border: 1px dashed #999; padding: 10px 20px; border-radius: 6px; cursor: pointer; }
+        .setup-header { 
+            padding: 24px 32px; border-bottom: 1px solid var(--border-color); 
+            display: flex; justify-content: space-between; align-items: center; background: #FAFAFA;
+        }
+        .header-title h2 { margin: 0 0 8px 0; color: var(--text-main); font-size: 22px; }
+        .header-title p { margin: 0; color: var(--text-secondary); font-size: 14px; }
+        
+        /* 顶部操作区 */
+        .header-actions { display: flex; gap: 16px; align-items: center; }
+        .btn-primary { background: var(--primary-color); color: white; border: none; padding: 10px 24px; border-radius: 6px; font-size: 15px; font-weight: 600; cursor: pointer; transition: 0.2s; box-shadow: 0 2px 0 rgba(5, 145, 255, 0.1); }
+        .btn-primary:hover { background: var(--primary-hover); }
+        .btn-outline { background: white; border: 1px solid var(--border-color); color: var(--text-main); padding: 10px 20px; border-radius: 6px; font-size: 14px; cursor: pointer; transition: 0.2s; }
         .btn-outline:hover { border-color: var(--primary-color); color: var(--primary-color); }
 
-        .start-drill-btn { background: #52C41A; color: white; border: none; padding: 15px; font-size: 16px; font-weight: bold; cursor: pointer; }
-        .start-drill-btn:hover { background: #389E0D; }
+        .setup-body { display: flex; flex: 1; overflow: hidden; }
 
-        /* ===== 小工具按钮：排序/复制/插入/删除 ===== */
-        .step-actions { display: flex; gap: 10px; align-items: center; }
-        .step-action-btn { cursor: pointer; color: #666; font-weight: normal; user-select: none; }
-        .step-action-btn:hover { color: var(--primary-color); }
-        .step-action-btn.danger:hover { color: var(--danger-color); }
-        .step-action-sep { width: 1px; height: 12px; background: #ddd; }
+        /* 极客导入侧边栏 (折叠到左侧) */
+        .sidebar { width: 280px; border-right: 1px solid var(--border-color); padding: 24px; background: #FAFAFA; display: flex; flex-direction: column; }
+        .sidebar h4 { margin: 0 0 16px 0; color: var(--text-main); font-size: 15px; }
+        .sidebar textarea { flex: 1; width: 100%; box-sizing: border-box; padding: 12px; border-radius: 6px; border: 1px solid var(--border-color); resize: none; font-family: monospace; font-size: 13px; margin-bottom: 16px; background: #FFF; }
 
-        /* ===== 拖拽排序 ===== */
-        .step-header { cursor: grab; }
-        .step-header:active { cursor: grabbing; }
-        .step-card.dragging { opacity: 0.5; }
-        .step-card.drag-over { outline: 2px dashed #91CAFF; outline-offset: 3px; }
+        /* 核心内容区 (横向列表) */
+        .main-content { flex: 1; padding: 24px 32px; overflow-y: auto; background: #FFF; }
+        
+        .timeline-container { display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px; }
 
-        /* ================= 视图 2：演练系统 ================= */
-        #drill-view { display: none; flex-direction: column; height: 100%; }
+        /* 横向紧凑型步骤条 (核心优化) */
+        .step-item { 
+            display: flex; align-items: center; gap: 12px; 
+            padding: 12px 16px; border: 1px solid var(--border-color); border-radius: 8px; 
+            background: #FAFAFA; transition: all 0.2s; position: relative;
+        }
+        .step-item:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.05); border-color: #D9D9D9; background: #FFF; }
+        .step-item.dragging { opacity: 0.4; }
+        .step-item.drag-over { outline: 2px dashed var(--primary-color); outline-offset: 2px; }
 
-        #dashboard-header { background: #FFF; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); }
-        .timer-badge { color: #555; font-weight: bold; font-family: monospace; font-size: 15px; }
-        .reset-btn { background-color: var(--danger-color); color: white; border: none; padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: bold; cursor: pointer; }
+        .drag-handle { cursor: grab; color: #BFBFBF; font-size: 18px; padding: 0 4px; }
+        .drag-handle:active { cursor: grabbing; }
 
-        #chat-box { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 20px; background-color: #F0F2F5; }
+        /* 标签 */
+        .badge { padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: bold; width: 65px; text-align: center; flex-shrink: 0; }
+        .badge.auto { background: #F6FFED; border: 1px solid #B7EB8F; color: #52C41A; }
+        .badge.manual { background: #E6F4FF; border: 1px solid #91CAFF; color: var(--primary-color); }
 
-        /* 完美左右布局：接收方(系统)在左，发送方(我)在右 */
+        /* 表单控件 */
+        .step-item select { padding: 8px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 14px; outline: none; background: #FFF; }
+        .step-item select:focus, .step-item input:focus { border-color: var(--primary-color); }
+        .input-content { flex: 1; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 14px; outline: none; }
+        .delay-wrapper { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-secondary); width: 130px; justify-content: flex-end;}
+        .input-delay { width: 50px; padding: 6px; border: 1px solid var(--border-color); border-radius: 6px; text-align: center; }
+
+        /* 操作按钮组 */
+        .item-actions { display: flex; gap: 8px; align-items: center; border-left: 1px solid #E8E8E8; padding-left: 12px; margin-left: 4px; }
+        .icon-btn { cursor: pointer; color: #8C8C8C; font-size: 16px; border: none; background: transparent; padding: 4px; border-radius: 4px; transition: 0.2s; }
+        .icon-btn:hover { background: #F0F0F0; color: var(--text-main); }
+        .icon-btn.danger:hover { background: #FFF1F0; color: var(--danger-color); }
+
+        /* ================= 视图 2：演练系统 (手机模拟器) ================= */
+        #drill-view { display: none; align-items: center; justify-content: center; height: 100%; background: #E4E8EE; position: relative; }
+        
+        /* 左上角返回按钮 */
+        .floating-back-btn { position: absolute; top: 24px; left: 24px; background: #FFF; border: 1px solid var(--border-color); padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.05); color: var(--text-main); z-index: 10; transition: 0.2s; }
+        .floating-back-btn:hover { color: var(--danger-color); border-color: var(--danger-color); }
+
+        /* 手机外壳 */
+        .phone-mockup { width: 420px; height: 90%; background: #FFF; border-radius: 40px; box-shadow: 0 24px 80px rgba(0,0,0,0.15); border: 8px solid #333; display: flex; flex-direction: column; overflow: hidden; position: relative; }
+        
+        #dashboard-header { background: #FAFAFA; padding: 16px 20px; display: flex; justify-content: center; align-items: center; border-bottom: 1px solid var(--border-color); }
+        .timer-badge { color: var(--primary-color); font-weight: bold; font-family: monospace; font-size: 16px; background: #E6F4FF; padding: 6px 16px; border-radius: 20px;}
+
+        #chat-box { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 20px; background-color: #F4F6F8; }
+
+        /* 聊天气泡布局 */
         .message-row { display: flex; width: 100%; }
         .message-row.other-side { flex-direction: row; justify-content: flex-start; }
         .message-row.my-side { flex-direction: row-reverse; justify-content: flex-start; }
 
-        .avatar { width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: bold; color: white; margin: 0 12px; flex-shrink: 0; }
+        .avatar { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: bold; color: white; margin: 0 10px; flex-shrink: 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1);}
         .avatar.other-avatar { background-color: #1A1D20; }
         .avatar.my-avatar { background-color: var(--primary-color); }
 
-        .msg-content-wrapper { display: flex; flex-direction: column; max-width: 70%; }
+        .msg-content-wrapper { display: flex; flex-direction: column; max-width: 75%; }
         .message-row.other-side .msg-content-wrapper { align-items: flex-start; }
         .message-row.my-side .msg-content-wrapper { align-items: flex-end; }
 
-        .message-bubble { padding: 12px 16px; border-radius: 8px; line-height: 1.5; font-size: 14px; word-wrap: break-word; position: relative; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
-        .message-row.other-side .message-bubble { background: var(--other-bg); color: #333; border-top-left-radius: 0; }
-        .message-row.my-side .message-bubble { background: var(--my-bg); color: #FFF; border-top-right-radius: 0; }
+        .message-bubble { padding: 12px 16px; border-radius: 10px; line-height: 1.5; font-size: 14px; word-wrap: break-word; position: relative; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        .message-row.other-side .message-bubble { background: var(--other-bg); color: #333; border-top-left-radius: 2px; }
+        .message-row.my-side .message-bubble { background: var(--my-bg); color: #FFF; border-top-right-radius: 2px; }
 
-        .msg-meta { font-size: 12px; color: #999; margin-top: 6px; font-family: monospace; }
-        
-        /* 状态图标：只显示在我方发出的消息右下角 */
-        .status-icon { position: absolute; bottom: -5px; right: -5px; width: 14px; height: 14px; background: #52C41A; border-radius: 50%; color: white; font-size: 10px; text-align: center; line-height: 14px; border: 2px solid #F0F2F5; }
+        .msg-meta { font-size: 11px; color: #999; margin-top: 6px; font-family: monospace; }
+        .status-icon { position: absolute; bottom: -5px; right: -5px; width: 14px; height: 14px; background: #52C41A; border-radius: 50%; color: white; font-size: 10px; text-align: center; line-height: 14px; border: 2px solid #F4F6F8; }
 
-        /* 打字动画 (强制在左侧) */
-        .typing-indicator { display: flex; align-items: center; gap: 4px; padding: 12px 16px; background: white; border-radius: 8px; border-top-left-radius: 0; }
+        /* 打字动画 */
+        .typing-indicator { display: flex; align-items: center; gap: 4px; padding: 12px 16px; background: white; border-radius: 10px; border-top-left-radius: 2px; }
         .typing-indicator span { width: 6px; height: 6px; background: #999; border-radius: 50%; animation: bounce 1.4s infinite ease-in-out both; }
         .typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
         .typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
         @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
 
         /* 输入区 */
-        #input-area { display: flex; padding: 15px; background: #FFF; border-top: 1px solid var(--border-color); gap: 10px; }
-        #chat-input { flex: 1; padding: 10px 15px; border: 1px solid #CCC; border-radius: 20px; font-size: 14px; outline: none; }
-        #chat-input:focus { border-color: var(--primary-color); }
-        #send-btn { background: var(--primary-color); color: white; border: none; border-radius: 20px; padding: 0 20px; font-weight: bold; cursor: pointer; }
-        #send-btn:disabled, #chat-input:disabled { background: #F5F5F5; cursor: not-allowed; border-color: #EEE; color: #999; }
+        #input-area { display: flex; padding: 12px; background: #FFF; border-top: 1px solid var(--border-color); gap: 10px; align-items: center;}
+        #chat-input { flex: 1; padding: 12px 16px; border: 1px solid #E8E8E8; background: #F4F6F8; border-radius: 24px; font-size: 14px; outline: none; transition: 0.2s;}
+        #chat-input:focus { border-color: var(--primary-color); background: #FFF; }
+        #send-btn { background: var(--primary-color); color: white; border: none; border-radius: 24px; padding: 0 20px; height: 40px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        #send-btn:hover:not(:disabled) { background: var(--primary-hover); }
+        #send-btn:disabled, #chat-input:disabled { background: #F0F0F0; cursor: not-allowed; border-color: #E8E8E8; color: #999; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    
     <div id="setup-view">
         <div class="setup-header">
-            <h2>对话演练 V6</h2>
-            <p>已预设完美剧本，可直接开始，或在下方修改</p>
+            <div class="header-title">
+                <h2>对话演练 V7 后台</h2>
+                <p>横向规则引擎，可视化极速编排交互剧本</p>
+            </div>
+            <div class="header-actions">
+                <button class="btn-outline" onclick="addStep('auto')">➕ 对方发言</button>
+                <button class="btn-outline" onclick="addStep('manual')">🗣️ 我方回复</button>
+                <button class="btn-primary" onclick="startDrill()">🚀 启动演练</button>
+            </div>
         </div>
         
-        <div class="timeline-builder">
-            <div class="quick-import-area">
-                <h4>极客模式：快速导入 JSON 剧本</h4>
-                <textarea id="json-import-input" placeholder='[{"type":"auto", "role":"客户", "content":"你好", "delay":1}]'></textarea>
-                <button onclick="importJSON()">一键导入覆盖</button>
+        <div class="setup-body">
+            <div class="sidebar">
+                <h4>🛠️ 极客面板</h4>
+                <textarea id="json-import-input" placeholder='输入 JSON 数组一键导入剧本...'></textarea>
+                <button class="btn-outline" style="width: 100%;" onclick="importJSON()">⬇️ 覆盖导入</button>
             </div>
             
-            <div id="timeline-container"></div>
-
-            <div class="add-btns">
-                <button class="btn-outline" onclick="addStep('auto')">➕ 添加对方发言</button>
-                <button class="btn-outline" onclick="addStep('manual')">🗣️ 添加我方回复(需手打)</button>
+            <div class="main-content">
+                <div id="timeline-container" class="timeline-container">
+                    </div>
             </div>
         </div>
-
-        <button class="start-drill-btn" onclick="startDrill()">🚀 准备完毕，立即开始演练</button>
     </div>
 
     <div id="drill-view">
-        <div id="dashboard-header">
-            <div class="timer-badge">⏱ <span id="elapsed-time">00:00</span></div>
-            <button id="reset-btn" class="reset-btn" onclick="resetDrill()">↩ 返回设置 / 重新开始</button>
-        </div>
+        <button class="floating-back-btn" onclick="resetDrill()">← 结束并返回配置</button>
         
-        <div id="chat-box"></div>
+        <div class="phone-mockup">
+            <div id="dashboard-header">
+                <div class="timer-badge">⏱ <span id="elapsed-time">00:00</span></div>
+            </div>
+            
+            <div id="chat-box"></div>
 
-        <div id="input-area">
-            <input type="text" id="chat-input" placeholder="系统演练中，不可输入..." disabled autocomplete="off">
-            <button id="send-btn" disabled>发送</button>
+            <div id="input-area">
+                <input type="text" id="chat-input" placeholder="等待演练开始..." disabled autocomplete="off">
+                <button id="send-btn" disabled>发送</button>
+            </div>
         </div>
     </div>
-
 </div>
 
 <script>
+    // 默认剧本
     let scriptSteps = [
         { id: 1, type: 'auto', role: '客户', content: '您好，我提现的资金一直没到账，怎么回事？', delay: 1 },
         { id: 2, type: 'manual', role: '客服', instruction: '请安抚客户并告知正在查询中' },
         { id: 3, type: 'auto', role: '客户', content: '那大概还需要等多久？', delay: 2 }
     ];
 
+    // --- 极简横向面板渲染逻辑 ---
     function renderTimeline() {
         const container = document.getElementById('timeline-container');
         container.innerHTML = '';
 
         scriptSteps.forEach((step, index) => {
-            const card = document.createElement('div');
-            card.className = `step-card ${step.type === 'auto' ? 'auto-step' : 'manual-step'}`;
-            card.dataset.index = index;
+            const item = document.createElement('div');
+            item.className = 'step-item';
+            item.dataset.index = index;
+            item.draggable = true;
+            item.addEventListener('dragstart', onDragStart);
+            item.addEventListener('dragend', onDragEnd);
+            item.addEventListener('dragover', onDragOver);
+            item.addEventListener('dragleave', onDragLeave);
+            item.addEventListener('drop', onDrop);
 
             if (step.type === 'auto') {
-                card.innerHTML = `
-                    <div class="step-header"
-                         draggable="true"
-                         ondragstart="onDragStart(event)"
-                         ondragend="onDragEnd(event)"
-                         ondragover="onDragOver(event)"
-                         ondragleave="onDragLeave(event)"
-                         ondrop="onDrop(event)">
-                        <span style="color:#52C41A">第 ${index + 1} 步：系统自动触发（对方）</span>
-                        <div class="step-actions">
-                            <span class="step-action-btn" onclick="moveStep(${index}, -1)" title="上移">↑</span>
-                            <span class="step-action-btn" onclick="moveStep(${index}, 1)" title="下移">↓</span>
-                            <span class="step-action-btn" onclick="duplicateStep(${index})" title="复制">⧉</span>
-                            <span class="step-action-btn" onclick="insertStepAfter(${index}, '${step.type}')" title="在下方插入">＋</span>
-                            <span class="step-action-sep"></span>
-                            <span class="step-action-btn danger" onclick="deleteStep(${step.id})" title="删除">删除</span>
-                        </div>
+                item.innerHTML = `
+                    <div class="drag-handle">⋮⋮</div>
+                    <div class="badge auto">自动触发</div>
+                    <select onchange="updateStep(${step.id}, 'role', this.value)">
+                        <option value="客户" ${step.role === '客户' ? 'selected' : ''}>客户</option>
+                        <option value="客服" ${step.role === '客服' ? 'selected' : ''}>客服</option>
+                    </select>
+                    <input type="text" class="input-content" value="${step.content || ''}" placeholder="输入对方发送的内容..." onchange="updateStep(${step.id}, 'content', this.value)">
+                    <div class="delay-wrapper">
+                        延时 <input type="number" class="input-delay" min="0" value="${step.delay}" onchange="updateStep(${step.id}, 'delay', this.value)"> 秒
                     </div>
-                    <div class="step-row">
-                        扮演 <select onchange="updateStep(${step.id}, 'role', this.value)">
-                            <option value="客户" ${step.role === '客户' ? 'selected' : ''}>客户</option>
-                            <option value="客服" ${step.role === '客服' ? 'selected' : ''}>客服</option>
-                        </select>
-                        ，等待 <input type="number" min="0" value="${step.delay}" onchange="updateStep(${step.id}, 'delay', this.value)"> 秒后发送：
-                    </div>
-                    <div class="step-row">
-                        <input type="text" value="${step.content || ''}" placeholder="输入文本内容..." onchange="updateStep(${step.id}, 'content', this.value)">
+                    <div class="item-actions">
+                        <button class="icon-btn" onclick="duplicateStep(${index})" title="复制">⧉</button>
+                        <button class="icon-btn danger" onclick="deleteStep(${step.id})" title="删除">🗑️</button>
                     </div>
                 `;
             } else {
-                card.innerHTML = `
-                    <div class="step-header"
-                         draggable="true"
-                         ondragstart="onDragStart(event)"
-                         ondragend="onDragEnd(event)"
-                         ondragover="onDragOver(event)"
-                         ondragleave="onDragLeave(event)"
-                         ondrop="onDrop(event)">
-                        <span style="color:var(--primary-color)">第 ${index + 1} 步：等待实战手动输入（我方）</span>
-                        <div class="step-actions">
-                            <span class="step-action-btn" onclick="moveStep(${index}, -1)" title="上移">↑</span>
-                            <span class="step-action-btn" onclick="moveStep(${index}, 1)" title="下移">↓</span>
-                            <span class="step-action-btn" onclick="duplicateStep(${index})" title="复制">⧉</span>
-                            <span class="step-action-btn" onclick="insertStepAfter(${index}, '${step.type}')" title="在下方插入">＋</span>
-                            <span class="step-action-sep"></span>
-                            <span class="step-action-btn danger" onclick="deleteStep(${step.id})" title="删除">删除</span>
-                        </div>
+                item.innerHTML = `
+                    <div class="drag-handle">⋮⋮</div>
+                    <div class="badge manual">等待输入</div>
+                    <select onchange="updateStep(${step.id}, 'role', this.value)">
+                        <option value="客服" ${step.role === '客服' ? 'selected' : ''}>客服</option>
+                        <option value="客户" ${step.role === '客户' ? 'selected' : ''}>客户</option>
+                    </select>
+                    <input type="text" class="input-content" value="${step.instruction || ''}" placeholder="输入任务提示 (如：向客户道歉)" onchange="updateStep(${step.id}, 'instruction', this.value)">
+                    <div class="delay-wrapper" style="opacity: 0.3; pointer-events: none;">
+                        延时 <input type="number" class="input-delay" value="0" disabled> 秒
                     </div>
-                    <div class="step-row">
-                        我要扮演 <select onchange="updateStep(${step.id}, 'role', this.value)">
-                            <option value="客服" ${step.role === '客服' ? 'selected' : ''}>客服</option>
-                            <option value="客户" ${step.role === '客户' ? 'selected' : ''}>客户</option>
-                        </select>
-                    </div>
-                    <div class="step-row">
-                        输入框任务提示：<input type="text" value="${step.instruction || ''}" placeholder="例如：向客户道歉..." onchange="updateStep(${step.id}, 'instruction', this.value)">
+                    <div class="item-actions">
+                        <button class="icon-btn" onclick="duplicateStep(${index})" title="复制">⧉</button>
+                        <button class="icon-btn danger" onclick="deleteStep(${step.id})" title="删除">🗑️</button>
                     </div>
                 `;
             }
-            container.appendChild(card);
+            container.appendChild(item);
         });
     }
 
@@ -254,92 +264,28 @@
         renderTimeline();
     }
 
-    function deleteStep(id) { 
-        scriptSteps = scriptSteps.filter(s => s.id !== id); 
-        renderTimeline(); 
-    }
-
-    function updateStep(id, field, value) { 
-        const step = scriptSteps.find(s => s.id === id); 
-        if (step) step[field] = field === 'delay' ? Number(value) : value; 
-    }
-
-    // ===== 排序 / 插入 / 复制 =====
-    function moveStep(index, delta) {
-        const newIndex = index + delta;
-        if (newIndex < 0 || newIndex >= scriptSteps.length) return;
-        const temp = scriptSteps[index];
-        scriptSteps[index] = scriptSteps[newIndex];
-        scriptSteps[newIndex] = temp;
-        renderTimeline();
-    }
-
+    function deleteStep(id) { scriptSteps = scriptSteps.filter(s => s.id !== id); renderTimeline(); }
+    function updateStep(id, field, value) { const step = scriptSteps.find(s => s.id === id); if (step) step[field] = field === 'delay' ? Number(value) : value; }
+    
     function duplicateStep(index) {
-        const original = scriptSteps[index];
-        if (!original) return;
-        const copy = JSON.parse(JSON.stringify(original));
+        const copy = JSON.parse(JSON.stringify(scriptSteps[index]));
         copy.id = Date.now();
         scriptSteps.splice(index + 1, 0, copy);
         renderTimeline();
     }
 
-    function insertStepAfter(index, preferType) {
-        const newId = Date.now();
-        const type = (preferType === 'manual' || preferType === 'auto') ? preferType : 'auto';
-        const newStep = type === 'auto'
-            ? { id: newId, type: 'auto', role: '客户', content: '', delay: 1 }
-            : { id: newId, type: 'manual', role: '客服', instruction: '请输入...' };
-        scriptSteps.splice(index + 1, 0, newStep);
-        renderTimeline();
-    }
-
-    // ===== 拖拽排序 =====
+    // ===== 拖拽排序逻辑 =====
     let dragFromIndex = null;
-
-    function getCardIndexFromEvent(e) {
-        const header = e.currentTarget;
-        const card = header.closest('.step-card');
-        if (!card) return null;
-        const idx = Number(card.dataset.index);
-        return Number.isFinite(idx) ? idx : null;
-    }
-
-    function onDragStart(e) {
-        dragFromIndex = getCardIndexFromEvent(e);
-        const card = e.currentTarget.closest('.step-card');
-        if (card) card.classList.add('dragging');
-        e.dataTransfer.effectAllowed = 'move';
-        e.dataTransfer.setData('text/plain', String(dragFromIndex));
-    }
-
-    function onDragEnd(e) {
-        dragFromIndex = null;
-        document.querySelectorAll('.step-card.dragging, .step-card.drag-over').forEach(el => {
-            el.classList.remove('dragging', 'drag-over');
-        });
-    }
-
-    function onDragOver(e) {
-        e.preventDefault();
-        const card = e.currentTarget.closest('.step-card');
-        if (card) card.classList.add('drag-over');
-        e.dataTransfer.dropEffect = 'move';
-    }
-
-    function onDragLeave(e) {
-        const card = e.currentTarget.closest('.step-card');
-        if (card) card.classList.remove('drag-over');
-    }
-
+    function getIndex(e) { return Number(e.currentTarget.dataset.index); }
+    function onDragStart(e) { dragFromIndex = getIndex(e); e.currentTarget.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move'; }
+    function onDragEnd(e) { dragFromIndex = null; document.querySelectorAll('.step-item').forEach(el => el.classList.remove('dragging', 'drag-over')); }
+    function onDragOver(e) { e.preventDefault(); e.currentTarget.classList.add('drag-over'); }
+    function onDragLeave(e) { e.currentTarget.classList.remove('drag-over'); }
     function onDrop(e) {
-        e.preventDefault();
-        const toIndex = getCardIndexFromEvent(e);
-        const fromIndex = dragFromIndex;
-        const card = e.currentTarget.closest('.step-card');
-        if (card) card.classList.remove('drag-over');
-        if (fromIndex === null || toIndex === null || fromIndex === toIndex) return;
-
-        const moved = scriptSteps.splice(fromIndex, 1)[0];
+        e.preventDefault(); e.currentTarget.classList.remove('drag-over');
+        const toIndex = getIndex(e);
+        if (dragFromIndex === null || dragFromIndex === toIndex) return;
+        const moved = scriptSteps.splice(dragFromIndex, 1)[0];
         scriptSteps.splice(toIndex, 0, moved);
         renderTimeline();
     }
@@ -349,9 +295,7 @@
             const input = document.getElementById('json-import-input').value;
             const parsed = JSON.parse(input);
             scriptSteps = parsed.map((item, index) => ({ id: Date.now() + index, ...item }));
-            renderTimeline();
-            alert("导入成功！");
-            document.getElementById('json-import-input').value = "";
+            renderTimeline(); alert("导入成功！"); document.getElementById('json-import-input').value = "";
         } catch(e) { alert("JSON 格式错误，请检查！"); }
     }
 
@@ -362,7 +306,7 @@
 
     const getNowTime = () => {
         const d = new Date();
-        return `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')}`;
+        return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')}`; // 极简时间格式
     };
 
     const sleep = (ms) => new Promise((resolve, reject) => {
@@ -371,29 +315,22 @@
     });
 
     function startTimer() {
-        secondsElapsed = 0;
-        document.getElementById('elapsed-time').innerText = "00:00";
+        secondsElapsed = 0; document.getElementById('elapsed-time').innerText = "00:00";
         timerInterval = setInterval(() => {
             secondsElapsed++;
-            const m = String(Math.floor(secondsElapsed / 60)).padStart(2, '0');
-            const s = String(secondsElapsed % 60).padStart(2, '0');
+            const m = String(Math.floor(secondsElapsed / 60)).padStart(2, '0'), s = String(secondsElapsed % 60).padStart(2, '0');
             document.getElementById('elapsed-time').innerText = `${m}:${s}`;
         }, 1000);
     }
 
-    // 渲染消息：新增参数 type (manual: 我方在右; auto: 系统在左)
     function renderMessage(role, content, type) {
         const chatBox = document.getElementById('chat-box');
-        const msgDiv = document.createElement('div');
-        
-        // 判断是谁的视角
         const isMySide = (type === 'manual');
         const msgClass = isMySide ? 'my-side' : 'other-side';
         const avatarIcon = role === '客服' ? '服' : '客';
-        
-        // 只有我方发送的消息，才带有送达小绿勾
         const statusIconHtml = isMySide ? `<div class="status-icon">✓</div>` : '';
 
+        const msgDiv = document.createElement('div');
         msgDiv.className = `message-row ${msgClass}`;
         msgDiv.innerHTML = `
             <div class="avatar ${isMySide ? 'my-avatar' : 'other-avatar'}">${avatarIcon}</div>
@@ -413,93 +350,61 @@
         const avatarIcon = role === '客服' ? '服' : '客';
         
         const div = document.createElement('div');
-        div.id = indicatorId;
-        // 动画永远是系统的动作，故永远靠左 (other-side)
-        div.className = `message-row other-side`;
+        div.id = indicatorId; div.className = `message-row other-side`;
         div.innerHTML = `<div class="avatar other-avatar">${avatarIcon}</div><div class="msg-content-wrapper"><div class="typing-indicator"><span></span><span></span><span></span></div></div>`;
-        chatBox.appendChild(div);
-        chatBox.scrollTop = chatBox.scrollHeight;
+        chatBox.appendChild(div); chatBox.scrollTop = chatBox.scrollHeight;
         
         try { await sleep(delayMs); } catch(e) {}
-        
-        const el = document.getElementById(indicatorId); 
-        if(el) el.remove();
+        const el = document.getElementById(indicatorId); if(el) el.remove();
     }
 
     function waitForUserReply(instruction) {
         return new Promise((resolve) => {
-            const input = document.getElementById('chat-input');
-            const btn = document.getElementById('send-btn');
-            input.disabled = false;
-            btn.disabled = false;
-            input.placeholder = instruction || "请输入并发送...";
-            input.focus();
+            const input = document.getElementById('chat-input'), btn = document.getElementById('send-btn');
+            input.disabled = false; btn.disabled = false;
+            input.placeholder = instruction || "输入回复..."; input.focus();
 
             const submit = () => {
-                const text = input.value.trim();
-                if(!text) return;
-                input.value = '';
-                input.disabled = true;
-                btn.disabled = true;
-                input.placeholder = "系统演练中，不可输入...";
-                btn.removeEventListener('click', submit);
-                input.removeEventListener('keypress', keypress);
+                const text = input.value.trim(); if(!text) return;
+                input.value = ''; input.disabled = true; btn.disabled = true; input.placeholder = "等待对方...";
+                btn.removeEventListener('click', submit); input.removeEventListener('keypress', keypress);
                 resolve(text);
             };
-
             const keypress = (e) => { if(e.key === 'Enter') submit(); };
-            btn.addEventListener('click', submit);
-            input.addEventListener('keypress', keypress);
+            btn.addEventListener('click', submit); input.addEventListener('keypress', keypress);
         });
     }
 
-    // --- 核心：重置与状态管理 ---
     function resetDrill() {
-        isSimulating = false;
-        clearInterval(timerInterval);
+        isSimulating = false; clearInterval(timerInterval);
         if (currentSleepReject) currentSleepReject();
-        
         document.getElementById('chat-box').innerHTML = '';
-        
-        const input = document.getElementById('chat-input');
-        const btn = document.getElementById('send-btn');
-        input.value = '';
-        input.disabled = true;
-        btn.disabled = true;
-        input.placeholder = "系统演练中，不可输入...";
-
+        const input = document.getElementById('chat-input'), btn = document.getElementById('send-btn');
+        input.value = ''; input.disabled = true; btn.disabled = true; input.placeholder = "等待演练开始...";
         document.getElementById('drill-view').style.display = 'none';
         document.getElementById('setup-view').style.display = 'flex';
     }
 
     async function startDrill() {
         if (scriptSteps.length === 0) return alert("请至少添加一条剧本！");
-
         document.getElementById('setup-view').style.display = 'none';
         document.getElementById('drill-view').style.display = 'flex';
         
-        isSimulating = true;
-        startTimer();
+        isSimulating = true; startTimer();
 
         for (const step of scriptSteps) {
             if (!isSimulating) break;
-
             if (step.type === 'manual') {
-                // 手动动作：渲染在右侧
                 const userInputText = await waitForUserReply(step.instruction);
-                if(!isSimulating) break;
-                renderMessage(step.role, userInputText, 'manual');
+                if(!isSimulating) break; renderMessage(step.role, userInputText, 'manual');
             } else {
-                // 系统动作：渲染在左侧
                 await playTypingAnimation(step.delay * 1000, step.role);
-                if(!isSimulating) break;
-                renderMessage(step.role, step.content || "[空]", 'auto');
+                if(!isSimulating) break; renderMessage(step.role, step.content || "[空]", 'auto');
             }
         }
-
         if (isSimulating) {
             clearInterval(timerInterval);
-            document.getElementById('chat-input').placeholder = "演练已结束。可点击右上角返回配置。";
+            document.getElementById('chat-input').placeholder = "🎉 演练完成！";
         }
     }
 </script>
