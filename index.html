@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>对话演练 V4 (互动版)</title>
+    <title>对话演练 V5 (全功能配置版)</title>
     <style>
         :root {
-            --primary-color: #1677FF; /* 调柔和的蓝色 */
+            --primary-color: #1677FF; 
             --service-bg: #FFFFFF;
             --service-text: #1C1E21;
             --customer-bg: var(--primary-color);
@@ -14,6 +14,7 @@
             --danger-color: #FF4D4F;
             --bg-color: #F0F2F5;
             --border-color: #E8E8E8;
+            --card-bg: #FFFFFF;
         }
 
         body {
@@ -29,19 +30,127 @@
 
         .container {
             width: 100%;
-            max-width: 650px;
+            max-width: 700px;
             background: #F8F9FA;
             border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
             display: flex;
             flex-direction: column;
             overflow: hidden;
             height: 100%;
-            max-height: 850px;
             border: 1px solid var(--border-color);
         }
 
-        /* 顶部控制台优化 */
+        /* ================= 视图 1：配置中心 ================= */
+        #setup-view {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            background: #F0F2F5;
+        }
+        
+        .setup-header {
+            background: #FFF;
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+            text-align: center;
+        }
+
+        .setup-header h2 { margin: 0 0 10px 0; color: #333; }
+        .setup-header p { margin: 0; color: #666; font-size: 14px; }
+
+        .timeline-builder {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        /* 配置卡片样式 */
+        .step-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+            position: relative;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .step-card.auto-step { border-left: 4px solid #52C41A; }
+        .step-card.manual-step { border-left: 4px solid var(--primary-color); }
+
+        .step-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .delete-btn {
+            color: var(--danger-color);
+            cursor: pointer;
+            font-weight: normal;
+            font-size: 12px;
+        }
+
+        .step-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+
+        .step-row select, .step-row input[type="number"], .step-row input[type="text"] {
+            padding: 8px;
+            border: 1px solid #CCC;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .step-row input[type="text"] { flex: 1; }
+        .step-row input[type="number"] { width: 60px; }
+
+        .add-btns {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            padding: 10px 0 20px 0;
+        }
+
+        .btn-outline {
+            background: white;
+            border: 1px dashed #999;
+            color: #333;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-outline:hover { border-color: var(--primary-color); color: var(--primary-color); }
+
+        .start-drill-btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 15px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        .start-drill-btn:hover { opacity: 0.9; }
+
+        /* ================= 视图 2：演练系统 ================= */
+        #drill-view {
+            display: none;
+            flex-direction: column;
+            height: 100%;
+        }
+
         #dashboard-header {
             background-color: #FFFFFF;
             padding: 12px 20px;
@@ -70,11 +179,8 @@
             border-radius: 6px;
             font-size: 13px;
             cursor: pointer;
-            transition: opacity 0.2s;
         }
-        .stop-btn:hover { opacity: 0.8; }
 
-        /* 聊天区域 */
         #chat-box {
             flex: 1;
             overflow-y: auto;
@@ -85,12 +191,7 @@
             background-color: #F0F2F5;
         }
 
-        .message-row {
-            display: flex;
-            width: 100%;
-            animation: fadeIn 0.3s ease;
-        }
-
+        .message-row { display: flex; width: 100%; animation: fadeIn 0.3s ease; }
         .message-row.service { justify-content: flex-start; flex-direction: row; }
         .message-row.customer { justify-content: flex-start; flex-direction: row-reverse; }
 
@@ -110,11 +211,7 @@
         .avatar.service-avatar { background-color: #8C8C8C; }
         .avatar.customer-avatar { background-color: var(--primary-color); }
 
-        .msg-content-wrapper {
-            max-width: 75%;
-            display: flex;
-            flex-direction: column;
-        }
+        .msg-content-wrapper { max-width: 75%; display: flex; flex-direction: column; }
         .message-row.customer .msg-content-wrapper { align-items: flex-end; }
 
         .message-bubble {
@@ -139,147 +236,180 @@
             border-top-right-radius: 2px;
         }
 
-        .msg-meta {
-            font-size: 12px;
-            color: #999;
-            margin-top: 4px;
-            font-family: monospace;
-        }
+        .msg-meta { font-size: 12px; color: #999; margin-top: 4px; font-family: monospace; }
 
-        /* 状态图标：绿色小勾 */
         .status-icon {
             display: inline-block;
-            width: 14px;
-            height: 14px;
-            background-color: #52C41A;
-            border-radius: 50%;
-            color: white;
-            font-size: 10px;
-            text-align: center;
-            line-height: 14px;
-            position: absolute;
-            bottom: -5px;
-            right: -5px;
-            border: 2px solid #F0F2F5;
+            width: 14px; height: 14px; background-color: #52C41A; border-radius: 50%;
+            color: white; font-size: 10px; text-align: center; line-height: 14px;
+            position: absolute; bottom: -5px; right: -5px; border: 2px solid #F0F2F5;
         }
 
         /* 打字动画 */
         .typing-indicator {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            padding: 10px 14px;
-            background: white;
-            border-radius: 8px;
-            width: fit-content;
+            display: flex; align-items: center; gap: 4px; padding: 10px 14px;
+            background: white; border-radius: 8px; width: fit-content;
         }
         .typing-indicator span {
-            width: 6px;
-            height: 6px;
-            background: #999;
-            border-radius: 50%;
+            width: 6px; height: 6px; background: #999; border-radius: 50%;
             animation: bounce 1.4s infinite ease-in-out both;
         }
         .typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
         .typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
         
-        @keyframes bounce {
-            0%, 80%, 100% { transform: scale(0); }
-            40% { transform: scale(1); }
-        }
+        @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* 底部输入区 (互动核心) */
+        /* 底部输入区 */
         #input-area {
-            display: flex;
-            padding: 15px;
-            background: #FFFFFF;
-            border-top: 1px solid var(--border-color);
-            gap: 10px;
+            display: flex; padding: 15px; background: #FFFFFF; border-top: 1px solid var(--border-color); gap: 10px;
         }
-
         #chat-input {
-            flex: 1;
-            padding: 10px 15px;
-            border: 1px solid var(--border-color);
-            border-radius: 20px;
-            font-size: 14px;
-            outline: none;
-            transition: border 0.3s;
+            flex: 1; padding: 10px 15px; border: 1px solid var(--border-color); border-radius: 20px; font-size: 14px; outline: none;
         }
         #chat-input:focus { border-color: var(--primary-color); }
         #chat-input:disabled { background-color: #F5F5F5; cursor: not-allowed; }
-
         #send-btn {
-            background-color: var(--primary-color);
-            color: white;
-            border: none;
-            border-radius: 20px;
-            padding: 0 20px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: opacity 0.2s;
+            background-color: var(--primary-color); color: white; border: none; border-radius: 20px; padding: 0 20px; font-weight: 600; cursor: pointer;
         }
         #send-btn:disabled { background-color: #D9D9D9; cursor: not-allowed; }
 
-        /* 初始启动遮罩层 */
-        #start-overlay {
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(255,255,255,0.9);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 100;
-        }
-        
-        .start-btn {
-            padding: 12px 30px;
-            background-color: var(--primary-color);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            cursor: pointer;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
     </style>
 </head>
 <body>
 
-<div class="container" style="position: relative;">
+<div class="container">
     
-    <div id="start-overlay">
-        <h2 style="color: #333; margin-bottom: 20px;">互动式演练系统</h2>
-        <button id="load-start-btn" class="start-btn">载入剧本并开始</button>
-        <p id="status-message" style="color: #ff4d4f; margin-top: 10px; font-size: 14px;"></p>
+    <div id="setup-view">
+        <div class="setup-header">
+            <h2>对话演练 V5 配置中心</h2>
+            <p>自由编排剧本，定制你的专属演练场景</p>
+        </div>
+        
+        <div class="timeline-builder" id="timeline-container">
+            </div>
+
+        <div class="add-btns">
+            <button class="btn-outline" onclick="addStep('auto')">➕ 添加系统自动回复</button>
+            <button class="btn-outline" onclick="addStep('manual')">🗣️ 添加我方手动输入</button>
+        </div>
+
+        <button class="start-drill-btn" onclick="startDrill()">💾 保存配置并开始演练</button>
     </div>
 
-    <div id="dashboard-header">
-        <div class="timer-badge">⏱ <span id="elapsed-time">00:00</span></div>
-        <button id="stop-btn" class="stop-btn">结束演练</button>
-    </div>
-    
-    <div id="chat-box"></div>
+    <div id="drill-view">
+        <div id="dashboard-header">
+            <div class="timer-badge">⏱ 演练耗时: <span id="elapsed-time">00:00</span></div>
+            <button id="stop-btn" class="stop-btn">⏹ 强制结束</button>
+        </div>
+        
+        <div id="chat-box"></div>
 
-    <div id="input-area">
-        <input type="text" id="chat-input" placeholder="系统演练中，不可输入..." disabled autocomplete="off">
-        <button id="send-btn" disabled>发送</button>
+        <div id="input-area">
+            <input type="text" id="chat-input" placeholder="系统演练中，不可输入..." disabled autocomplete="off">
+            <button id="send-btn" disabled>发送</button>
+        </div>
     </div>
 
 </div>
 
 <script>
+    // ==========================================
+    // 模块 1：配置中心逻辑 (剧本构建器)
+    // ==========================================
+    
+    // 默认提供一个简单的模板，方便快速理解
+    let scriptSteps = [
+        { id: 1, type: 'auto', role: '客户', content: 'BNB提现还没到账，着急', delay: 1 },
+        { id: 2, type: 'manual', role: '客服', instruction: '请安抚客户并告知正在查询' },
+        { id: 3, type: 'auto', role: '客户', content: '好的，大概要多久？', delay: 2 }
+    ];
+
+    function renderTimeline() {
+        const container = document.getElementById('timeline-container');
+        container.innerHTML = '';
+
+        scriptSteps.forEach((step, index) => {
+            const card = document.createElement('div');
+            card.className = `step-card ${step.type === 'auto' ? 'auto-step' : 'manual-step'}`;
+            
+            if (step.type === 'auto') {
+                card.innerHTML = `
+                    <div class="step-header">
+                        <span style="color:#52C41A">🤖 第 ${index + 1} 步：系统自动触发</span>
+                        <span class="delete-btn" onclick="deleteStep(${step.id})">删除</span>
+                    </div>
+                    <div class="step-row">
+                        <select onchange="updateStep(${step.id}, 'role', this.value)">
+                            <option value="客户" ${step.role === '客户' ? 'selected' : ''}>客户</option>
+                            <option value="客服" ${step.role === '客服' ? 'selected' : ''}>客服</option>
+                        </select>
+                        等待 <input type="number" min="0" value="${step.delay}" onchange="updateStep(${step.id}, 'delay', this.value)"> 秒后，发送：
+                    </div>
+                    <div class="step-row">
+                        <input type="text" value="${step.content || ''}" placeholder="输入系统自动发送的文本..." onchange="updateStep(${step.id}, 'content', this.value)">
+                    </div>
+                `;
+            } else {
+                card.innerHTML = `
+                    <div class="step-header">
+                        <span style="color:var(--primary-color)">🗣️ 第 ${index + 1} 步：等待人工输入</span>
+                        <span class="delete-btn" onclick="deleteStep(${step.id})">删除</span>
+                    </div>
+                    <div class="step-row">
+                        <select onchange="updateStep(${step.id}, 'role', this.value)">
+                            <option value="客服" ${step.role === '客服' ? 'selected' : ''}>客服</option>
+                            <option value="客户" ${step.role === '客户' ? 'selected' : ''}>客户</option>
+                        </select>
+                        输入框提示语：
+                    </div>
+                    <div class="step-row">
+                        <input type="text" value="${step.instruction || ''}" placeholder="例如：请向客户解释排队情况..." onchange="updateStep(${step.id}, 'instruction', this.value)">
+                    </div>
+                `;
+            }
+            container.appendChild(card);
+        });
+        
+        // 滚动到底部
+        container.scrollTop = container.scrollHeight;
+    }
+
+    function addStep(type) {
+        const newId = Date.now();
+        if (type === 'auto') {
+            scriptSteps.push({ id: newId, type: 'auto', role: '客户', content: '', delay: 2 });
+        } else {
+            scriptSteps.push({ id: newId, type: 'manual', role: '客服', instruction: '请输入你的回复...' });
+        }
+        renderTimeline();
+    }
+
+    function deleteStep(id) {
+        scriptSteps = scriptSteps.filter(s => s.id !== id);
+        renderTimeline();
+    }
+
+    function updateStep(id, field, value) {
+        const step = scriptSteps.find(s => s.id === id);
+        if (step) {
+            step[field] = field === 'delay' ? Number(value) : value;
+        }
+    }
+
+    // 页面加载时渲染默认配置
+    renderTimeline();
+
+
+    // ==========================================
+    // 模块 2：演练播放器逻辑
+    // ==========================================
+
     let isSimulating = false;
     let timerInterval = null;
     let secondsElapsed = 0;
     let currentSleepReject = null;
 
-    // 获取当前时间精确到秒 (用于用户自己输入时的展示)
     const getNowTime = () => {
         const now = new Date();
         const yyyy = now.getFullYear();
@@ -299,7 +429,6 @@
         };
     });
 
-    // 计时器逻辑
     function startTimer() {
         secondsElapsed = 0;
         document.getElementById('elapsed-time').innerText = "00:00";
@@ -311,16 +440,13 @@
         }, 1000);
     }
 
-    // 渲染普通消息
     function renderMessage(role, content, time) {
         const chatBox = document.getElementById('chat-box');
         const msgDiv = document.createElement('div');
         const msgClass = role === '客服' ? 'service' : 'customer';
-        msgDiv.className = `message-row ${msgClass}`;
 
         const avatarIcon = role === '客服' ? '服' : '客';
         const timeText = time ? ` • ${time}` : "";
-        // 只有客服才显示绿色小勾（代表已送达客户端）
         const statusIconHtml = role === '客服' ? `<div class="status-icon">✓</div>` : '';
 
         msgDiv.innerHTML = `
@@ -338,7 +464,6 @@
         chatBox.scrollTop = chatBox.scrollHeight;
     }
 
-    // 显示“正在输入...”动画
     async function playTypingAnimation(delayMs, role) {
         if(delayMs <= 0 || !isSimulating) return;
         
@@ -359,31 +484,26 @@
         chatBox.appendChild(div);
         chatBox.scrollTop = chatBox.scrollHeight;
 
-        try {
-            await sleep(delayMs);
-        } catch(e) {} // 忽略中断错误
+        try { await sleep(delayMs); } catch(e) {}
 
         const el = document.getElementById(indicatorId);
         if(el) el.remove();
     }
 
-    // 等待用户输入的 Promise 核心逻辑
     function waitForUserReply(instruction) {
         return new Promise((resolve) => {
             const input = document.getElementById('chat-input');
             const btn = document.getElementById('send-btn');
             
-            // 启用输入框
             input.disabled = false;
             btn.disabled = false;
-            input.placeholder = instruction || "请输入您的回复并按回车...";
+            input.placeholder = instruction || "请输入并按回车发送...";
             input.focus();
 
             const submit = () => {
                 const text = input.value.trim();
-                if(!text) return; // 不允许发空消息
+                if(!text) return; 
                 
-                // 发送后立刻禁用输入框
                 input.value = '';
                 input.disabled = true;
                 btn.disabled = true;
@@ -401,84 +521,57 @@
         });
     }
 
-    // 核心演练循环
-    async function runDrill(scriptData) {
-        for (const msg of scriptData) {
+    async function startDrill() {
+        // 校验是否配置了剧本
+        if (scriptSteps.length === 0) {
+            alert("请至少添加一条剧本！");
+            return;
+        }
+
+        // 切换视图
+        document.getElementById('setup-view').style.display = 'none';
+        document.getElementById('drill-view').style.display = 'flex';
+        
+        isSimulating = true;
+        startTimer();
+
+        // 执行剧本
+        for (const step of scriptSteps) {
             if (!isSimulating) break;
 
-            if (msg.role === "互动环节") {
-                // 1. 等待人员输入
-                const userInputText = await waitForUserReply(msg.instruction);
+            if (step.type === 'manual') {
+                // 等待人工手动输入
+                const userInputText = await waitForUserReply(step.instruction);
                 if(!isSimulating) break;
-
-                // 2. 将输入内容作为客服发出去
-                renderMessage("客服", userInputText, getNowTime());
-
-                // 3. 关键词判定逻辑
-                let nextCustomerReply = "";
-                // 先找默认回复 (fallback)
-                const defaultBranch = msg.branches.find(b => b.keywords.includes("default"));
-                if (defaultBranch) nextCustomerReply = defaultBranch.next_customer_reply;
-
-                // 遍历查找匹配的关键词
-                for (let branch of msg.branches) {
-                    if (branch.keywords.includes("default")) continue;
-                    // 如果用户的输入包含数组中的任意一个关键词
-                    if (branch.keywords.some(kw => userInputText.includes(kw))) {
-                        nextCustomerReply = branch.next_customer_reply;
-                        break;
-                    }
-                }
-
-                // 4. 客户“思考”后回复
-                await playTypingAnimation(2000, "客户");
-                if(!isSimulating) break;
-                renderMessage("客户", nextCustomerReply, getNowTime());
-
+                renderMessage(step.role, userInputText, getNowTime());
             } else {
-                // 普通自动播放流程
-                await playTypingAnimation(msg.delay * 1000, msg.role);
+                // 系统自动根据设定的秒数延迟发送
+                await playTypingAnimation(step.delay * 1000, step.role);
                 if(!isSimulating) break;
-                renderMessage(msg.role, msg.content, msg.time);
+                // 如果内容为空，给予默认提示
+                const content = step.content || "[系统发送了空消息]";
+                renderMessage(step.role, content, getNowTime());
             }
         }
 
         if (isSimulating) {
             clearInterval(timerInterval);
-            document.getElementById('chat-input').placeholder = "演练已结束。";
-            alert("✅ 本次剧本演练已全部完成！");
+            document.getElementById('chat-input').placeholder = "演练已圆满结束 ✅";
+            alert("🎉 恭喜！当前配置的剧本已全部演练完成。你可以刷新页面重新配置或开始。");
+            document.getElementById('stop-btn').style.display = 'none';
         }
     }
 
-    // 启动按钮事件
-    document.getElementById('load-start-btn').addEventListener('click', async () => {
-        const btn = document.getElementById('load-start-btn');
-        const statusMsg = document.getElementById('status-message');
-        btn.innerText = "读取中...";
-
-        try {
-            const response = await fetch('./data.json?t=' + Date.now());
-            if (!response.ok) throw new Error("读取失败");
-            const scriptData = await response.json();
-
-            document.getElementById('start-overlay').style.display = 'none';
-            isSimulating = true;
-            startTimer();
-            runDrill(scriptData).catch(() => {});
-
-        } catch (error) {
-            btn.innerText = "载入剧本并开始";
-            statusMsg.innerText = "无法读取 data.json，请检查文件是否存在。";
-        }
-    });
-
-    // 停止按钮事件
     document.getElementById('stop-btn').addEventListener('click', () => {
         isSimulating = false;
         clearInterval(timerInterval);
         document.getElementById('chat-input').disabled = true;
         document.getElementById('send-btn').disabled = true;
         document.getElementById('chat-input').placeholder = "演练已强行终止";
+        const stopBtn = document.getElementById('stop-btn');
+        stopBtn.innerText = "已终止";
+        stopBtn.style.backgroundColor = "#999";
+        stopBtn.disabled = true;
         if (currentSleepReject) currentSleepReject();
     });
 
