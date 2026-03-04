@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -63,6 +64,13 @@
 
         .start-drill-btn { background: #52C41A; color: white; border: none; padding: 15px; font-size: 16px; font-weight: bold; cursor: pointer; }
         .start-drill-btn:hover { background: #389E0D; }
+
+        /* ===== 新增：步骤卡片右侧小工具按钮（不改 UI 结构，只加一点功能入口） ===== */
+        .step-actions { display: flex; gap: 10px; align-items: center; }
+        .step-action-btn { cursor: pointer; color: #666; font-weight: normal; user-select: none; }
+        .step-action-btn:hover { color: var(--primary-color); }
+        .step-action-btn.danger:hover { color: var(--danger-color); }
+        .step-action-sep { width: 1px; height: 12px; background: #ddd; }
 
         /* ================= 视图 2：演练系统 ================= */
         #drill-view { display: none; flex-direction: column; height: 100%; }
@@ -175,7 +183,14 @@
                 card.innerHTML = `
                     <div class="step-header">
                         <span style="color:#52C41A">第 ${index + 1} 步：系统自动触发</span>
-                        <span class="delete-btn" onclick="deleteStep(${step.id})">删除</span>
+                        <div class="step-actions">
+                            <span class="step-action-btn" onclick="moveStep(${index}, -1)" title="上移">↑</span>
+                            <span class="step-action-btn" onclick="moveStep(${index}, 1)" title="下移">↓</span>
+                            <span class="step-action-btn" onclick="duplicateStep(${index})" title="复制">⧉</span>
+                            <span class="step-action-btn" onclick="insertStepAfter(${index}, '${step.type}')" title="在下方插入">＋</span>
+                            <span class="step-action-sep"></span>
+                            <span class="step-action-btn danger" onclick="deleteStep(${step.id})" title="删除">删除</span>
+                        </div>
                     </div>
                     <div class="step-row">
                         扮演 <select onchange="updateStep(${step.id}, 'role', this.value)">
@@ -192,7 +207,14 @@
                 card.innerHTML = `
                     <div class="step-header">
                         <span style="color:var(--primary-color)">第 ${index + 1} 步：等待实战手动输入</span>
-                        <span class="delete-btn" onclick="deleteStep(${step.id})">删除</span>
+                        <div class="step-actions">
+                            <span class="step-action-btn" onclick="moveStep(${index}, -1)" title="上移">↑</span>
+                            <span class="step-action-btn" onclick="moveStep(${index}, 1)" title="下移">↓</span>
+                            <span class="step-action-btn" onclick="duplicateStep(${index})" title="复制">⧉</span>
+                            <span class="step-action-btn" onclick="insertStepAfter(${index}, '${step.type}')" title="在下方插入">＋</span>
+                            <span class="step-action-sep"></span>
+                            <span class="step-action-btn danger" onclick="deleteStep(${step.id})" title="删除">删除</span>
+                        </div>
                     </div>
                     <div class="step-row">
                         我要扮演 <select onchange="updateStep(${step.id}, 'role', this.value)">
@@ -215,9 +237,50 @@
         else scriptSteps.push({ id: newId, type: 'manual', role: '客服', instruction: '请输入...' });
         renderTimeline();
     }
-    function deleteStep(id) { scriptSteps = scriptSteps.filter(s => s.id !== id); renderTimeline(); }
-    function updateStep(id, field, value) { const step = scriptSteps.find(s => s.id === id); if (step) step[field] = field === 'delay' ? Number(value) : value; }
-    
+
+    function deleteStep(id) { 
+        scriptSteps = scriptSteps.filter(s => s.id !== id); 
+        renderTimeline(); 
+    }
+
+    function updateStep(id, field, value) { 
+        const step = scriptSteps.find(s => s.id === id); 
+        if (step) step[field] = field === 'delay' ? Number(value) : value; 
+    }
+
+    // ===== 新增：排序 / 插入 / 复制（尽量不改 UI，仅加功能） =====
+    function moveStep(index, delta) {
+        const newIndex = index + delta;
+        if (newIndex < 0 || newIndex >= scriptSteps.length) return;
+
+        const temp = scriptSteps[index];
+        scriptSteps[index] = scriptSteps[newIndex];
+        scriptSteps[newIndex] = temp;
+        renderTimeline();
+    }
+
+    function duplicateStep(index) {
+        const original = scriptSteps[index];
+        if (!original) return;
+
+        const copy = JSON.parse(JSON.stringify(original));
+        copy.id = Date.now(); // 新 id
+        scriptSteps.splice(index + 1, 0, copy);
+        renderTimeline();
+    }
+
+    function insertStepAfter(index, preferType) {
+        const newId = Date.now();
+        const type = (preferType === 'manual' || preferType === 'auto') ? preferType : 'auto';
+
+        const newStep = type === 'auto'
+            ? { id: newId, type: 'auto', role: '客户', content: '', delay: 1 }
+            : { id: newId, type: 'manual', role: '客服', instruction: '请输入...' };
+
+        scriptSteps.splice(index + 1, 0, newStep);
+        renderTimeline();
+    }
+
     function importJSON() {
         try {
             const input = document.getElementById('json-import-input').value;
@@ -351,3 +414,4 @@
 </script>
 </body>
 </html>
+```
