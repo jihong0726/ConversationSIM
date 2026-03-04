@@ -3,224 +3,385 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ServiceBox 客服演练沙盒</title>
+    <title>ServiceBox 智能演练舱</title>
     <style>
+        :root {
+            --primary-color: #0052FF; /* 更现代的科技蓝 */
+            --service-bg: #F0F2F5;
+            --service-text: #1C1E21;
+            --customer-bg: var(--primary-color);
+            --customer-text: #FFFFFF;
+            --danger-color: #FF3B30;
+            --bg-color: #E4E6EB;
+        }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: #f4f5f7;
+            background-color: var(--bg-color);
             margin: 0;
             padding: 20px;
             display: flex;
             justify-content: center;
-        }
-        .container {
-            width: 100%;
-            max-width: 500px;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            padding: 20px;
+            height: 100vh;
             box-sizing: border-box;
         }
-        
-        /* 启动界面样式 */
-        #start-screen {
-            text-align: center;
-            padding: 40px 20px;
-        }
-        .status-text {
-            color: #666;
-            margin-bottom: 20px;
-            font-size: 14px;
-        }
-        button {
+
+        .container {
             width: 100%;
-            padding: 12px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            cursor: pointer;
-            transition: background 0.3s;
-        }
-        button:hover {
-            background-color: #0056b3;
-        }
-        button:disabled {
-            background-color: #cccccc;
-            cursor: not-allowed;
+            max-width: 600px; /* 稍微加宽以适应更丰富的UI */
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            height: 100%;
+            max-height: 800px;
         }
 
-        /* 聊天区域样式 */
-        #chat-area {
-            display: none;
-            height: 650px;
-            flex-direction: column;
-        }
-        #time-header {
-            display: flex;
-            justify-content: space-between;
-            background-color: #2c3e50;
-            color: #ecf0f1;
-            padding: 12px 15px;
-            border-radius: 8px 8px 0 0;
-            font-size: 13px;
-            font-weight: 500;
-            margin-bottom: 0;
-        }
-        .time-block span {
-            font-family: monospace;
-            font-size: 14px;
-            margin-left: 5px;
-            color: #4facfe;
-        }
-        #chat-box {
-            flex-grow: 1;
-            overflow-y: auto;
-            padding: 15px;
-            border: 1px solid #eee;
-            border-top: none;
-            border-radius: 0 0 8px 8px;
-            background-color: #fafafa;
+        /* 启动界面样式 */
+        #start-screen {
+            flex: 1;
             display: flex;
             flex-direction: column;
-        }
-        .message {
-            margin-bottom: 15px;
-            max-width: 80%;
-            padding: 10px 14px;
-            border-radius: 12px;
-            line-height: 1.5;
-            word-wrap: break-word;
-            font-size: 14px;
-            animation: fadeIn 0.3s ease-in-out; /* 添加了一个简单的气泡出现动画 */
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+            text-align: center;
         }
         
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
+        .start-btn {
+            padding: 14px 28px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0, 82, 255, 0.3);
+            width: 80%;
+            max-width: 300px;
+        }
+
+        .start-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0, 82, 255, 0.4);
+        }
+
+        .start-btn:disabled {
+            background-color: #A0B9ED;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* 聊天区域主控台 (头部) */
+        #chat-area {
+            display: none;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        #dashboard-header {
+            background-color: #1A1D20;
+            color: #FFFFFF;
+            padding: 16px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .top-stats {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+            font-family: monospace;
+        }
+
+        .timer-badge {
+            background-color: rgba(255,255,255,0.1);
+            padding: 4px 10px;
+            border-radius: 6px;
+            color: #4facfe;
+            font-weight: bold;
+            font-size: 15px;
+        }
+
+        .control-panel {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            padding-top: 12px;
+        }
+
+        .stop-btn {
+            background-color: var(--danger-color);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .stop-btn:hover {
+            background-color: #D32F2F;
+        }
+
+        /* 聊天气泡区域 */
+        #chat-box {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background-color: #F8F9FA;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .message-row {
+            display: flex;
+            width: 100%;
+            animation: slideIn 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        .message-row.service {
+            justify-content: flex-start;
+        }
+
+        .message-row.customer {
+            justify-content: flex-end;
+            flex-direction: row-reverse;
+        }
+
+        /* 头像样式 */
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            object-fit: cover;
+            margin: 0 12px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .msg-content-wrapper {
+            max-width: 70%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .message-row.customer .msg-content-wrapper {
+            align-items: flex-end;
+        }
+
+        /* 气泡样式优化 */
+        .message-bubble {
+            padding: 12px 16px;
+            border-radius: 12px;
+            line-height: 1.5;
+            font-size: 15px;
+            word-wrap: break-word;
+            position: relative;
+        }
+
+        .message-row.service .message-bubble {
+            background-color: var(--service-bg);
+            color: var(--service-text);
+            border-top-left-radius: 4px;
+        }
+
+        .message-row.customer .message-bubble {
+            background-color: var(--customer-bg);
+            color: var(--customer-text);
+            border-top-right-radius: 4px;
+        }
+
+        /* 时间戳样式精确到秒 */
+        .msg-meta {
+            font-size: 12px;
+            color: #888;
+            margin-top: 6px;
+            font-family: monospace;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(15px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
-        .message.service {
-            align-self: flex-start;
-            background-color: #e9ecef;
-            color: #333;
-            border-bottom-left-radius: 2px;
-        }
-        .message.customer {
-            align-self: flex-end;
-            background-color: #007bff;
-            color: white;
-            border-bottom-right-radius: 2px;
-        }
-        .role-label {
-            font-size: 12px;
-            margin-bottom: 4px;
-            opacity: 0.8;
-            font-weight: bold;
-        }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div id="start-screen">
-        <h2>客服演练沙盒</h2>
-        <div class="status-text" id="status-message">准备读取剧本文件...</div>
-        <button id="load-start-btn">加载 data.json 并开始</button>
+        <h2 style="color: #333; margin-bottom: 8px;">ServiceBox 演练舱</h2>
+        <p id="status-message" style="color: #666; margin-bottom: 30px;">就绪，点击下方按钮读取剧本</p>
+        <button id="load-start-btn" class="start-btn">载入 data.json 并开始</button>
     </div>
 
     <div id="chat-area">
-        <div id="time-header">
-            <div class="time-block">当前时间:<span id="local-time">--:--:--</span></div>
-            <div class="time-block">经理时间 (PT):<span id="manager-time">--:--:--</span></div>
+        <div id="dashboard-header">
+            <div class="top-stats">
+                <div>本地: <span id="local-time">--:--:--</span></div>
+                <div class="timer-badge">⏱ 耗时: <span id="elapsed-time">00:00</span></div>
+                <div>PT: <span id="manager-time">--:--:--</span></div>
+            </div>
+            <div class="control-panel">
+                <span style="font-size: 14px; font-weight: 500;">🟢 演练进行中...</span>
+                <button id="stop-btn" class="stop-btn">⏹ 停止演练</button>
+            </div>
         </div>
+        
         <div id="chat-box"></div>
     </div>
 </div>
 
 <script>
-    // 睡眠函数，用于控制延迟
-    const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+    // --- 核心全局变量 ---
+    let isSimulating = false;   // 演练状态标志
+    let timerInterval = null;   // 计时器句柄
+    let clockInterval = null;   // 时钟句柄
+    let secondsElapsed = 0;     // 经过的秒数
+    let currentSleepReject = null; // 用于强制中断休眠 (Stop功能核心)
 
-    // 时钟控制函数
-    function startClock() {
-        setInterval(() => {
+    // --- 经过改良的可中断休眠函数 ---
+    const sleep = (ms) => new Promise((resolve, reject) => {
+        const timeout = setTimeout(resolve, ms);
+        // 保存 reject 方法，当点击停止按钮时触发
+        currentSleepReject = () => {
+            clearTimeout(timeout);
+            reject(new Error("演练已被手动强制停止"));
+        };
+    });
+
+    // --- 时钟与计时器逻辑 ---
+    function startClocks() {
+        // 1. 顶部当前时间刷新 (精确到秒)
+        clockInterval = setInterval(() => {
             const now = new Date();
-            // 本地时间 (自动读取用户电脑时区)
             document.getElementById('local-time').innerText = now.toLocaleTimeString('zh-CN', { hour12: false });
-            // 经理时间 (固定为太平洋时间 PT)
             document.getElementById('manager-time').innerText = now.toLocaleTimeString('zh-CN', { 
                 timeZone: 'America/Los_Angeles', 
                 hour12: false 
             });
         }, 1000);
+
+        // 2. 演练耗时计时器 (秒表)
+        secondsElapsed = 0;
+        document.getElementById('elapsed-time').innerText = "00:00";
+        timerInterval = setInterval(() => {
+            secondsElapsed++;
+            const m = String(Math.floor(secondsElapsed / 60)).padStart(2, '0');
+            const s = String(secondsElapsed % 60).padStart(2, '0');
+            document.getElementById('elapsed-time').innerText = `${m}:${s}`;
+        }, 1000);
     }
 
-    // 按钮点击事件：读取 JSON 并开始
-    document.getElementById('load-start-btn').addEventListener('click', async () => {
-        const statusMsg = document.getElementById('status-message');
-        const btn = document.getElementById('load-start-btn');
+    function stopClocks() {
+        clearInterval(clockInterval);
+        clearInterval(timerInterval);
+    }
+
+    // --- 停止按钮逻辑 ---
+    document.getElementById('stop-btn').addEventListener('click', () => {
+        isSimulating = false;
+        stopClocks();
         
-        btn.disabled = true;
-        statusMsg.innerText = "正在读取 data.json...";
+        // 改变按钮样式和文字
+        const stopBtn = document.getElementById('stop-btn');
+        stopBtn.innerText = "已终止 (刷新页面重开)";
+        stopBtn.style.backgroundColor = "#555";
+        stopBtn.disabled = true;
 
-        try {
-            // 请求同目录下的 data.json
-            const response = await fetch('./data.json');
-            
-            if (!response.ok) {
-                throw new Error(`HTTP 错误! 状态码: ${response.status}`);
-            }
-            
-            const scriptData = await response.json();
+        document.querySelector('.control-panel span').innerText = "🔴 演练已终止";
 
-            btn.disabled = false;
-            statusMsg.innerText = "读取成功！";
-
-            // 弹出系统确认框
-            if (confirm("已成功加载剧本，是否立即开始演练？")) {
-                // 切换界面
-                document.getElementById('start-screen').style.display = 'none';
-                document.getElementById('chat-area').style.display = 'flex';
-                
-                // 启动顶部时钟
-                startClock();
-                // 执行对话剧本
-                runDrill(scriptData);
-            }
-
-        } catch (error) {
-            btn.disabled = false;
-            statusMsg.style.color = "red";
-            statusMsg.innerText = "读取失败！请确保 data.json 文件与 index.html 在同一目录下。";
-            console.error("读取 JSON 失败:", error);
+        // 如果系统正在长久等待(比如78秒)，立即强行中断等待
+        if (currentSleepReject) {
+            currentSleepReject();
+            currentSleepReject = null;
         }
     });
 
-    // 核心演练逻辑
+    // --- 启动逻辑 ---
+    document.getElementById('load-start-btn').addEventListener('click', async () => {
+        const btn = document.getElementById('load-start-btn');
+        const statusMsg = document.getElementById('status-message');
+        
+        btn.disabled = true;
+        btn.innerText = "读取中...";
+
+        try {
+            const response = await fetch('./data.json');
+            if (!response.ok) throw new Error("HTTP Error");
+            const scriptData = await response.json();
+
+            document.getElementById('start-screen').style.display = 'none';
+            document.getElementById('chat-area').style.display = 'flex';
+            
+            isSimulating = true;
+            startClocks();
+            
+            // 启动演练，并捕获强制停止引发的错误
+            runDrill(scriptData).catch(err => {
+                console.log(err.message); // 后台静默打印被停止的信息
+            });
+
+        } catch (error) {
+            btn.disabled = false;
+            btn.innerText = "重新尝试";
+            statusMsg.style.color = "red";
+            statusMsg.innerText = "读取失败！请确保你在 GitHub Pages 上运行，且 data.json 存在。";
+        }
+    });
+
+    // --- 聊天渲染核心逻辑 ---
     async function runDrill(scriptData) {
         const chatBox = document.getElementById('chat-box');
         
         for (const msg of scriptData) {
-            // 根据 JSON 设定的秒数进行等待
+            // 如果已经被点击了停止，直接退出循环
+            if (!isSimulating) break;
+
+            // 等待设定的时间 (可被 stopBtn 中断)
             await sleep(msg.delay * 1000);
 
-            // 创建消息气泡
+            // 使用免费API自动生成文字头像
+            const avatarColor = msg.role === '客服' ? '1A1D20' : '0052FF';
+            const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(msg.role.charAt(0))}&background=${avatarColor}&color=fff&size=80`;
+
             const msgDiv = document.createElement('div');
             const msgClass = msg.role === '客服' ? 'service' : 'customer';
-            msgDiv.className = `message ${msgClass}`;
+            msgDiv.className = `message-row ${msgClass}`;
 
+            // 获取当前精确到秒的时间戳
+            const timeStamp = new Date().toLocaleTimeString('zh-CN', { hour12: false });
+
+            // 构建带头像、气泡和单条时间戳的 UI
             msgDiv.innerHTML = `
-                <div class="role-label">${msg.role}</div>
-                <div>${msg.content}</div>
+                <img src="${avatarUrl}" class="avatar" alt="avatar">
+                <div class="msg-content-wrapper">
+                    <div class="message-bubble">${msg.content}</div>
+                    <div class="msg-meta">${msg.role} • ${timeStamp}</div>
+                </div>
             `;
 
             chatBox.appendChild(msgDiv);
-            
-            // 自动滚动到底部
             chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        // 正常播完后停止计时
+        if (isSimulating) {
+            stopClocks();
+            document.querySelector('.control-panel span').innerText = "✅ 演练已完成";
+            document.getElementById('stop-btn').style.display = 'none';
         }
     }
 </script>
