@@ -3,11 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>对话演练 V18</title>
+    <title>对话沙盘演练</title>
     <style>
         :root {
             --primary-color: #1677FF; 
             --primary-hover: #4096FF;
+            --customer-color: #52C41A;
             --other-bg: #FFFFFF;
             --my-bg: var(--primary-color);
             --danger-color: #FF4D4F;
@@ -27,31 +28,38 @@
         .header-title h2 { margin: 0 0 8px 0; color: var(--text-main); font-size: 22px; font-weight: 600; }
         .header-title p { margin: 0; color: #888; font-size: 14px; }
         
-        .role-selector { display: flex; align-items: center; gap: 10px; background: #F5F8FF; padding: 8px 16px; border-radius: 8px; border: 1px solid #D6E4FF; }
-        .global-toggle-btn { background: #FFF; color: var(--primary-color); border: 1px solid var(--primary-color); padding: 6px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 14px; }
-        .global-toggle-btn:hover { background: #E6F4FF; }
+        /* 顶部全局角色切换按钮：颜色智能同步 */
+        .role-selector { display: flex; align-items: center; gap: 10px; background: #FAFAFA; padding: 8px 16px; border-radius: 8px; border: 1px solid var(--border-color); }
+        .global-toggle-btn { padding: 6px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 14px; user-select: none;}
+        .global-toggle-btn.role-kefu { background: #E6F4FF; color: #1677FF; border: 1px solid #1677FF; }
+        .global-toggle-btn.role-kefu:hover { background: #1677FF; color: #FFF; }
+        .global-toggle-btn.role-kehu { background: #F6FFED; color: #52C41A; border: 1px solid #52C41A; }
+        .global-toggle-btn.role-kehu:hover { background: #52C41A; color: #FFF; }
 
         .btn-primary { background: var(--primary-color); color: white; border: none; padding: 10px 24px; border-radius: 6px; font-size: 15px; font-weight: bold; cursor: pointer; transition: 0.2s; }
         .btn-primary:hover { background: var(--primary-hover); }
 
         .setup-body { display: flex; flex: 1; overflow: hidden; background: #F8FAFC; }
 
-        .sidebar { width: 300px; border-right: 1px solid var(--border-color); padding: 24px; background: #FFF; display: flex; flex-direction: column; }
+        .sidebar { width: 320px; border-right: 1px solid var(--border-color); padding: 24px; background: #FFF; display: flex; flex-direction: column; }
         .sidebar h4 { margin: 0 0 10px 0; color: var(--text-main); font-size: 16px; }
         .sidebar p { margin: 0 0 16px 0; color: #888; font-size: 12px; line-height: 1.5; }
         .sidebar textarea { flex: 1; width: 100%; box-sizing: border-box; padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); resize: none; font-size: 13px; margin-bottom: 16px; line-height: 1.5; outline: none; transition: 0.2s;}
         .sidebar textarea:focus { border-color: var(--primary-color); }
         
-        .btn-parse { background: #52C41A; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .btn-parse { background: #52C41A; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; margin-bottom: 24px;}
         .btn-parse:hover { background: #389E0D; }
         
-        .btn-sandbox { background: #FFF; color: var(--sandbox-color); border: 1px solid var(--sandbox-color); padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; margin-top: 12px; }
-        .btn-sandbox:hover { background: #FFF7E6; }
+        .sandbox-config { background: #FFF7E6; border: 1px solid #FFD591; padding: 16px; border-radius: 8px; display: flex; flex-direction: column; gap: 12px;}
+        .sandbox-config h4 { margin: 0; color: var(--sandbox-color); font-size: 14px;}
+        .btn-sandbox { background: var(--sandbox-color); color: #FFF; border: none; padding: 12px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .btn-sandbox:hover { background: #D46B08; }
 
         .main-content { flex: 1; padding: 24px 32px; overflow-y: auto; }
         .timeline-container { display: flex; flex-direction: column; gap: 16px; margin-bottom: 24px; }
 
-        .step-item { display: flex; align-items: center; gap: 12px; padding: 16px; border: 1px solid var(--border-color); border-radius: 8px; background: #FFF; transition: 0.2s; position: relative; box-shadow: 0 2px 6px rgba(0,0,0,0.02);}
+        /* 配置卡片 */
+        .step-item { display: flex; align-items: center; gap: 10px; padding: 16px; border: 1px solid var(--border-color); border-radius: 8px; background: #FFF; transition: 0.2s; position: relative; box-shadow: 0 2px 6px rgba(0,0,0,0.02);}
         .step-item:hover { box-shadow: 0 6px 16px rgba(0,0,0,0.06); border-color: #D9D9D9; }
         .step-item.dragging { opacity: 0.4; }
         .step-item.drag-over { border-top: 3px solid var(--primary-color); }
@@ -70,11 +78,15 @@
         .input-content { flex: 1; padding: 10px 14px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 13px; outline: none; resize: vertical; min-height: 24px; font-family: inherit; line-height: 1.5; transition: 0.2s;}
         .input-content:focus { border-color: var(--primary-color); box-shadow: 0 0 0 2px rgba(22,119,255,0.1);}
         
-        .time-wrapper { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #666;}
-        .input-time { width: 80px; padding: 8px; border: 1px solid var(--border-color); border-radius: 6px; text-align: center; font-family: monospace; font-size: 13px; outline:none;}
-        .input-time:focus { border-color: var(--primary-color); }
+        /* 全新：步进器间隔时间设置 UI */
+        .time-wrapper { display: flex; align-items: center; gap: 4px; font-size: 13px; color: #999; white-space: nowrap;}
+        .step-btn { background: #F0F0F0; border: none; width: 26px; height: 26px; border-radius: 4px; cursor: pointer; font-weight: bold; color: #666; transition: 0.2s; display: flex; align-items: center; justify-content: center; user-select: none;}
+        .step-btn:hover { background: #E0E0E0; color: var(--primary-color); }
+        .input-delay { width: 36px; padding: 4px; border: 1px solid var(--border-color); border-radius: 4px; text-align: center; font-family: monospace; font-size: 14px; outline:none; -moz-appearance: textfield; font-weight: bold;}
+        .input-delay::-webkit-outer-spin-button, .input-delay::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        .input-delay:focus { border-color: var(--primary-color); }
 
-        .btn-group { display: flex; gap: 4px; }
+        .btn-group { display: flex; gap: 4px; border-left: 1px solid #EEE; padding-left: 10px; margin-left: 4px;}
         .icon-btn { cursor: pointer; color: #999; font-size: 16px; border: none; background: transparent; padding: 8px; border-radius: 6px; transition: 0.2s; display: flex; align-items: center; justify-content: center;}
         .icon-btn:hover { background: #F0F0F0; color: var(--primary-color); }
         .icon-btn.danger:hover { background: #FFF1F0; color: var(--danger-color); }
@@ -143,13 +155,13 @@
     <div id="setup-view">
         <div class="setup-header">
             <div class="header-title">
-                <h2>对话演练 V18</h2>
-                <p>恢复并升级了“向下复制”功能，一键克隆并智能递增时间</p>
+                <h2>对话沙盘演练</h2>
+                <p>快速配置对话节点，沉浸式模拟真实聊天场景</p>
             </div>
             
             <div class="role-selector">
                 <span style="font-size:14px; color:#666;">本次演练我扮演：</span>
-                <button id="global-role-btn" class="global-toggle-btn" onclick="toggleGlobalRole()">客服</button>
+                <button id="global-role-btn" class="global-toggle-btn role-kefu" onclick="toggleGlobalRole()">客服</button>
             </div>
 
             <button class="btn-primary" onclick="startDrill()">🚀 启动标准演练</button>
@@ -157,12 +169,22 @@
         
         <div class="setup-body">
             <div class="sidebar">
-                <h4>✨ 输入区</h4>
-                <p>你可以粘贴规范的后台记录，也可以直接随意敲打几行纯文案草稿。</p>
+                <h4>✨ 智能提取解析</h4>
+                <p>粘贴原始聊天记录，自动提取对话。系统会自动计算并填入每句话的间隔秒数。</p>
                 <textarea id="smart-paste-input" placeholder="输入示例：&#10;你好，在吗？&#10;在的，请问有什么可以帮您？&#10;充值没到账！"></textarea>
                 <button class="btn-parse" onclick="smartParseText()">✨ 一键智能解析</button>
                 
-                <button class="btn-sandbox" onclick="startSandbox()">🏜️ 极速沙盒解析 (自动排版)</button>
+                <div class="sandbox-config">
+                    <h4>🏜️ 极速沙盒 (纯文本连播)</h4>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="font-size: 13px; color: #666;">自动间隔：</span>
+                        <button class="step-btn" onclick="adjustSandboxInterval(-1)">-</button>
+                        <input type="number" id="sandbox-interval" value="5" min="0" class="input-delay">
+                        <button class="step-btn" onclick="adjustSandboxInterval(1)">+</button>
+                        <span style="font-size: 13px; color: #666;">秒</span>
+                    </div>
+                    <button class="btn-sandbox" onclick="startSandbox()">生成沙盒排版</button>
+                </div>
             </div>
             
             <div class="main-content">
@@ -203,10 +225,21 @@
 <script>
     let myGlobalRole = '客服';
     let speedMultiplier = 1;
+    let globalBaseTimeStr = "10:00:00"; // 用于记录真实的起始时间
 
     function toggleGlobalRole() {
         myGlobalRole = myGlobalRole === '客服' ? '客户' : '客服';
-        document.getElementById('global-role-btn').innerText = myGlobalRole;
+        const btn = document.getElementById('global-role-btn');
+        btn.innerText = myGlobalRole;
+        
+        if (myGlobalRole === '客服') {
+            btn.classList.add('role-kefu');
+            btn.classList.remove('role-kehu');
+        } else {
+            btn.classList.add('role-kehu');
+            btn.classList.remove('role-kefu');
+        }
+
         scriptSteps.forEach(step => {
             step.mode = (step.role === myGlobalRole) ? 'manual' : 'auto';
         });
@@ -221,12 +254,21 @@
         document.getElementById('speed-btn').innerText = `⏩ 倍速: ${speedMultiplier}x`;
     }
 
+    function adjustSandboxInterval(delta) {
+        const input = document.getElementById('sandbox-interval');
+        let val = parseInt(input.value) || 0;
+        val += delta;
+        if(val < 0) val = 0;
+        input.value = val;
+    }
+
     let scriptSteps = [];
 
     function clearAllSteps() {
         if (scriptSteps.length === 0) return;
         if (confirm("确定要清空所有剧本内容吗？")) {
             scriptSteps = [];
+            globalBaseTimeStr = "10:00:00";
             renderTimeline();
         }
     }
@@ -285,19 +327,33 @@
         }
 
         let newSteps = [];
-        textBlocks.forEach(block => {
+        let lastTimeInSeconds = 0;
+
+        textBlocks.forEach((block, index) => {
             let contentStr = block.content.join('\n').trim(); 
             if (!contentStr) return; 
+
+            let currentSeconds = timeToSec(block.timeStr);
+            let delay = 2; // Default
+            
+            if (index === 0 && scriptSteps.length === 0) {
+                globalBaseTimeStr = block.timeStr; // 记住最原始的开场时间
+                delay = 1;
+            } else if (lastTimeInSeconds > 0 && currentSeconds >= lastTimeInSeconds) {
+                delay = currentSeconds - lastTimeInSeconds;
+            }
+            lastTimeInSeconds = currentSeconds;
+
             newSteps.push({
                 id: Date.now() + Math.random(),
                 role: block.role,
                 content: contentStr,
-                timeStr: block.timeStr,
+                delay: delay,
                 mode: block.role === myGlobalRole ? 'manual' : 'auto'
             });
         });
 
-        if (newSteps.length === 0) return alert("未能提取出带有时间戳的有效对话。如果你只是想测试纯文案，请点击『极速沙盒』按钮！");
+        if (newSteps.length === 0) return alert("未能提取出有效对话。如果你想测试纯文案，请点击『极速沙盒』按钮！");
         scriptSteps = scriptSteps.length === 0 ? newSteps : scriptSteps.concat(newSteps);
         renderTimeline();
         document.getElementById('smart-paste-input').value = '';
@@ -306,11 +362,12 @@
     function startSandbox() {
         const text = document.getElementById('smart-paste-input').value;
         if (!text.trim()) return alert("请先在左侧输入你要体验的纯文字！");
+        
+        const customInterval = parseInt(document.getElementById('sandbox-interval').value) || 0;
 
         const lines = text.split('\n').map(l => l.trim()).filter(l => l !== '' && l !== 'h' && l !== 'E' && l !== '实时聊天' && !l.startsWith('客户端'));
 
         let newSteps = [];
-        let baseTime = timeToSec("10:00:00");
         let currentRole = myGlobalRole === '客服' ? '客户' : '客服'; 
 
         lines.forEach((line, index) => {
@@ -329,13 +386,12 @@
             }
 
             content = content.replace(/^.*?[：:]/, '').trim();
-            let timeStr = formatSecToTime(baseTime + (index * 5));
 
             newSteps.push({
                 id: Date.now() + index,
                 role: role,
                 content: content || "...",
-                timeStr: timeStr,
+                delay: index === 0 ? 1 : customInterval, 
                 mode: 'auto' 
             });
         });
@@ -344,22 +400,24 @@
         renderTimeline();
         document.getElementById('smart-paste-input').value = '';
         
-        alert("🏜️ 沙盒剧本已为您自动排版在右侧！\n\n如需体验 5 秒连播的视觉效果，请点击右上角的【启动标准演练】。");
+        alert(`🏜️ 沙盒剧本已生成！(间隔 ${customInterval} 秒)\n\n请点击右上角的【启动标准演练】体验视觉效果。`);
     }
 
-    // --- 核心更新：加入一键复制按钮与逻辑 ---
     function duplicateStep(id) {
         const index = scriptSteps.findIndex(s => s.id === id);
         if (index > -1) {
             const original = scriptSteps[index];
             const copy = JSON.parse(JSON.stringify(original));
-            copy.id = Date.now() + Math.random(); // 确保新行的 ID 唯一
-            
-            // 智能：给复制出来的行默认加上 5 秒的时间，免得你还要手动改时间冲突
-            let currentSec = timeToSec(copy.timeStr);
-            copy.timeStr = formatSecToTime(currentSec + 5);
+            copy.id = Date.now() + Math.random(); 
+            scriptSteps.splice(index + 1, 0, copy); 
+            renderTimeline();
+        }
+    }
 
-            scriptSteps.splice(index + 1, 0, copy); // 插入到当前行下方
+    function adjustDelay(id, delta) {
+        const step = scriptSteps.find(s => s.id === id);
+        if (step) {
+            step.delay = Math.max(0, (parseInt(step.delay) || 0) + delta);
             renderTimeline();
         }
     }
@@ -388,7 +446,6 @@
             const modeClass = step.mode === 'auto' ? 'mode-auto' : 'mode-manual';
             const modeText = step.mode === 'auto' ? '🤖 系统自动发' : '✍️ 实战我来敲';
 
-            // 按钮组增加了向下的复制图标
             item.innerHTML = `
                 <div class="drag-handle" title="拖拽排序">⋮⋮</div>
                 <div style="width: 24px; color:#BFBFBF; font-weight:600; font-size:14px;">${index+1}.</div>
@@ -397,8 +454,13 @@
                 <div class="toggle-badge ${modeClass}" onclick="toggleStepMode(${step.id})" title="点击切换触发方式">${modeText}</div>
                 
                 <textarea class="input-content" placeholder="填写发送的内容..." onchange="updateStep(${step.id}, 'content', this.value)">${step.content || ''}</textarea>
+                
                 <div class="time-wrapper">
-                    时间 <input type="text" class="input-time" value="${step.timeStr || '10:00:00'}" onchange="updateStep(${step.id}, 'timeStr', this.value)">
+                    <span>间隔</span>
+                    <button class="step-btn" onclick="adjustDelay(${step.id}, -1)">-</button>
+                    <input type="number" class="input-delay" value="${step.delay || 0}" min="0" onchange="updateStep(${step.id}, 'delay', this.value)">
+                    <button class="step-btn" onclick="adjustDelay(${step.id}, 1)">+</button>
+                    <span>秒</span>
                 </div>
                 
                 <div class="btn-group">
@@ -446,16 +508,11 @@
     }
 
     function addBlankStep() {
-        let newTime = "10:00:00";
-        if(scriptSteps.length > 0) {
-            let lastSec = timeToSec(scriptSteps[scriptSteps.length-1].timeStr) + 60;
-            newTime = formatSecToTime(lastSec);
-        }
         let lastRole = scriptSteps.length > 0 ? scriptSteps[scriptSteps.length-1].role : myGlobalRole;
         let newRole = lastRole === '客服' ? '客户' : '客服';
         let newMode = newRole === myGlobalRole ? 'manual' : 'auto';
 
-        scriptSteps.push({ id: Date.now(), role: newRole, mode: newMode, content: '', timeStr: newTime });
+        scriptSteps.push({ id: Date.now(), role: newRole, mode: newMode, content: '', delay: 5 });
         renderTimeline();
         
         setTimeout(() => {
@@ -465,10 +522,16 @@
     }
 
     function deleteStep(id) { scriptSteps = scriptSteps.filter(s => s.id !== id); renderTimeline(); }
-    function updateStep(id, field, value) { const step = scriptSteps.find(s => s.id === id); if (step) { step[field] = value; } }
+    function updateStep(id, field, value) { 
+        const step = scriptSteps.find(s => s.id === id); 
+        if (step) step[field] = field === 'delay' ? Math.max(0, parseInt(value) || 0) : value; 
+    }
     
     renderTimeline();
 
+    // ==========================================
+    // 演练播放器核心
+    // ==========================================
     let isSimulating = false;
     let clockInterval = null;
     let currentSleepReject = null;
@@ -589,7 +652,8 @@
         
         isSimulating = true;
         
-        simulatedClockSec = timeToSec(scriptSteps[0].timeStr);
+        let currentTargetSec = timeToSec(globalBaseTimeStr);
+        simulatedClockSec = currentTargetSec;
         document.getElementById('simulated-clock').innerText = formatSecToTime(simulatedClockSec);
 
         clockInterval = setInterval(() => {
@@ -603,29 +667,30 @@
             const step = scriptSteps[i];
             if (!isSimulating) break;
 
-            let delaySec = 0; 
-            if (i > 0) {
-                let prevSec = timeToSec(scriptSteps[i-1].timeStr);
-                let currSec = timeToSec(step.timeStr);
-                let diff = currSec - prevSec;
-                if (diff < 0) diff += 86400; 
-                delaySec = Math.max(0, diff);
-            }
+            let delaySec = parseInt(step.delay) || 0;
+            currentTargetSec += delaySec;
 
             if (step.mode === 'manual') {
+                // 将时钟预先推到该有的时间节点，因为实战敲击可能很快
+                simulatedClockSec = currentTargetSec; 
+                document.getElementById('simulated-clock').innerText = formatSecToTime(simulatedClockSec);
+
                 isWaitingForManual = true; 
                 const userInputText = await waitForUserReply(step.content);
                 isWaitingForManual = false;
                 if(!isSimulating) break; 
                 
-                simulatedClockSec = timeToSec(step.timeStr); 
-                renderMessage(step.role, userInputText, step.timeStr);
+                simulatedClockSec = currentTargetSec; // 校准时间
+                renderMessage(step.role, userInputText, formatSecToTime(simulatedClockSec));
             } else {
+                let actualWaitTimeMs = (delaySec * 1000) / speedMultiplier;
+                if (actualWaitTimeMs < 500 && delaySec > 0) actualWaitTimeMs = 500;
+
                 await playTypingAnimation(delaySec, step.role);
                 if(!isSimulating) break; 
                 
-                simulatedClockSec = timeToSec(step.timeStr); 
-                renderMessage(step.role, step.content || "[空]", step.timeStr);
+                simulatedClockSec = currentTargetSec; // 校准时间
+                renderMessage(step.role, step.content || "[空]", formatSecToTime(simulatedClockSec));
             }
         }
         
